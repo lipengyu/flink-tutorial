@@ -7,21 +7,24 @@ object ReadingFromStream {
   def main(args: Array[String]): Unit = {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(1)
-    val stream = env.addSource(new SensorSource)
-
-    // DataStream -> DataStream
+    val stream: DataStream[SensorReading] = env.addSource(new SensorSource)
 
     // 匿名函数来实现map算子
-    // stream.map(r => r.id).print()
+    val mapStreamWithLambda: DataStream[String] = stream.map(r => r.id)
+    mapStreamWithLambda.print()
+
 
     // 使用接口的方式来实现map算子
-    // stream.map(new MyMapFunction).print()
+    val mapStreamWithInterface: DataStream[String] = stream.map(new MyMapFunction)
+    mapStreamWithInterface.print()
 
     // 使用匿名函数来实现filter算子
-    // stream.filter(r => r.temperature > 0).print()
+    val filterStreamWithLambda: DataStream[SensorReading] = stream.filter(r => r.temperature > 0)
+    filterStreamWithLambda.print()
 
     // 使用接口的方式来实现filter算子
-    stream.filter(new MyFilterFunction).print()
+    val filterStreamWithInterface: DataStream[SensorReading] = stream.filter(new MyFilterFunction)
+    filterStreamWithInterface.print()
 
     env.execute()
   }
