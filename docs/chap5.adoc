@@ -282,7 +282,7 @@ class MyMapFunction extends MapFunction[Int, Int] {
 }
 ----
 
-函数接口定义了需要由用户实现的转换方法，例如上面例子中的`map()`方法。
+函数接口定义了需要由用户实现的转换方法，例如上面例子中的``map()``方法。
 
 大部分函数接口被设计为``Single Abstract Method``（单独抽象方法）接口，并且接口可以使用Java 8匿名函数来实现。Scala DataStream API也内置了对匿名函数的支持。当讲解DataStream API的转换算子时，我们展示了针对所有函数类的接口，但为了简洁，大部分接口的实现使用匿名函数而不是函数类的方式。
 
@@ -507,7 +507,7 @@ val connected: ConnectedStreams[Int, String] = first.connect(second)
 
 ConnectedStreams提供了``map()``和``flatMap()``方法，分别需要接收类型为``CoMapFunction``和``CoFlatMapFunction``的参数。
 
-以上两个函数里面的泛型是第一条流的事件类型和第二条流的事件类型，以及输出流的事件类型。还定义了两个方法，每一个方法针对一条流来调用。`map1()`和`flatMap1()`会调用在第一条流的元素上面，`map2()`和`flatMap2()`会调用在第二条流的元素上面。
+以上两个函数里面的泛型是第一条流的事件类型和第二条流的事件类型，以及输出流的事件类型。还定义了两个方法，每一个方法针对一条流来调用。``map1()``和``flatMap1()``会调用在第一条流的元素上面，``map2()``和``flatMap2()``会调用在第二条流的元素上面。
 
 ----
 // IN1: 第一条流的事件类型
