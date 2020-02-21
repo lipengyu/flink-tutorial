@@ -26,6 +26,13 @@ object ReadingFromStream {
     val filterStreamWithInterface: DataStream[SensorReading] = stream.filter(new MyFilterFunction)
     filterStreamWithInterface.print()
 
+    // one-to-one
+//    val streamExample = env
+//      .addSource(new SensorSource).setParallelism(1)
+//      .map(r => r.temperature).setParallelism(1)
+//      .filter(r => r > 20).setParallelism(1)
+//      .flatMap().setParallelism(1)
+
     env.execute()
   }
 
