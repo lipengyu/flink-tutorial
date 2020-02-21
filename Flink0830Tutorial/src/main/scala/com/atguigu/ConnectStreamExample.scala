@@ -17,6 +17,7 @@ object ConnectStreamExample {
       (1, 2)
     )
 
+    // select * from A inner join B on A.id = B.id;
     // conn和conn1的写法是等价的
     val conn: ConnectedStreams[(Int, String), (Int, Int)] = stream1
       .keyBy(_._1)
