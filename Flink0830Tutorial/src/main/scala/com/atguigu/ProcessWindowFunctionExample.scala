@@ -8,6 +8,7 @@ import org.apache.flink.util.Collector
 
 // 教程 6-12
 // 需求：计算窗口中最大温度和最小温度，附加上窗口结束时间
+// 全窗口聚合函数需要将窗口中的所有元素都缓存下来，如果元素很多，那么存储压力就很大
 object ProcessWindowFunctionExample {
 
   case class MinMaxTemp(id: String, min: Double, max: Double, endTs: Long)
