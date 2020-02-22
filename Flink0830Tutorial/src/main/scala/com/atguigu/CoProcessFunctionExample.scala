@@ -28,6 +28,8 @@ object CoProcessFunctionExample {
 
   class ReadingFilter extends CoProcessFunction[SensorReading, (String, Long), SensorReading] {
     // 传送数据的开关
+    // getRuntimeContext.getState首先去查找当前 key 所对应的状态中有没有名字叫做 filterSwitch 的状态变量
+    // 没有的话，就初始化一个
     lazy val forwardingEnabled : ValueState[Boolean] = getRuntimeContext.getState(
       new ValueStateDescriptor[Boolean]("filterSwitch", Types.of[Boolean])
     )
