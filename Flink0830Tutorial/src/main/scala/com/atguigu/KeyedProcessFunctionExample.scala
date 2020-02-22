@@ -1,12 +1,13 @@
 package com.atguigu
 
-import org.apache.flink.api.common.state.ValueStateDescriptor
+import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.api.scala.typeutils.Types
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 
 // 教程中例子6-5
+// 检测连续 1s 温度上升，然后报警
 object KeyedProcessFunctionExample {
 
   // KeyedProcessFunction只能操作KeyedStream
@@ -16,6 +17,7 @@ object KeyedProcessFunctionExample {
     val warnings = env
       .addSource(new SensorSource)
       .keyBy(_.id)
+      // 注意是 process ！
       .process(new TempIncreaseAlertFunction)
 
     warnings.print()
@@ -28,20 +30,25 @@ object KeyedProcessFunctionExample {
     // 惰性赋值
     // 只会初始化一次，当程序挂掉，再重启的时候，会调用getState方法看一下这个状态变量存在不存在，如果存在，就不初始化
     // 默认值为 0.0
-    lazy val lastTemp = getRuntimeContext.getState(
+    // 可以把状态变量存储到状态后端（JVM，HDFS，RocksDB，FileSystem）
+    // 供程序挂掉恢复时，从检查点恢复使用
+    lazy val lastTemp : ValueState[Double] = getRuntimeContext.getState(
       new ValueStateDescriptor[Double]("lastTemp", Types.of[Double])
     )
 
     // 默认值为 0L
-    lazy val currentTimer = getRuntimeContext.getState(
+    // 保存定时器时间戳的状态变量
+    lazy val currentTimer : ValueState[Long] = getRuntimeContext.getState(
       new ValueStateDescriptor[Long]("timer", Types.of[Long])
     )
 
+    // 每到来一条事件，都会调用一次
     override def processElement(value: SensorReading,
                                 // #是类型投影的意思，用来访问内部类
                                 ctx: KeyedProcessFunction[String, SensorReading, String]#Context,
                                 out: Collector[String]): Unit = {
       // ValueState的读取使用`.value()`方法
+      // 如果当前读数是传感器的第一条数据，那么 prevTemp 的值是 0.0
       val prevTemp = lastTemp.value()
 
       // ValueState的更新使用`.update()`方法
