@@ -2862,8 +2862,10 @@ FlatMapFunction[T, O]
 <div class="paragraph">
 <p>如图5-4所示，把输入事件的颜色作为key，黑色的事件输出到了一个分区，其他颜色输出到了另一个分区。</p>
 </div>
-<div class="paragraph">
-<p>images::spaf_0504.png[caption="图5-4"]</p>
+<div class="imageblock">
+<div class="content">
+<img src="images/spaf_0504.png" alt="spaf 0504">
+</div>
 </div>
 <div class="paragraph">
 <p><code>keyBy()</code>方法接收一个参数，这个参数指定了key或者keys，有很多不同的方法来指定key。我们将在后面讲解。下面的代码声明了<code>id</code>这个字段为SensorReading流的key。</p>
@@ -3274,7 +3276,7 @@ keyBy()方法不同于分布式转换算子。所有的分布式转换算子将�
 <div class="sect2">
 <h3 id="_类型">5.10. 类型</h3>
 <div class="paragraph">
-<p>Flink程序所处理的流中的事件一般是对象类型。操作符接收对象输出对象。所以Flink的内部机制需要能够处理事件的类型。在网络中传输数据，或者将数据写入到状态后端、检查点和保存点中，都需要我们对数据进行序列化和反序列化。为了高效的进行此类操作，Flink需要流中事件类型的详细信息。Flink使用了`Type Information`的概念来表达数据类型，这样就能针对不同的数据类型产生特定的序列化器，反序列化器和比较操作符。</p>
+<p>Flink程序所处理的流中的事件一般是对象类型。操作符接收对象输出对象。所以Flink的内部机制需要能够处理事件的类型。在网络中传输数据，或者将数据写入到状态后端、检查点和保存点中，都需要我们对数据进行序列化和反序列化。为了高效的进行此类操作，Flink需要流中事件类型的详细信息。Flink使用了<code>Type Information</code>的概念来表达数据类型，这样就能针对不同的数据类型产生特定的序列化器，反序列化器和比较操作符。</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -4969,6 +4971,30 @@ IngestionTime没什么价值，既有EventTime的执行效率（比较低），�
 
   <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">isEventTime</span> <span class="tok-k">=</span> <span class="tok-kc">true</span>
 <span class="tok-o">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>增量聚合示意图</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/spaf_0604.png" alt="spaf 0604">
+</div>
+</div>
+<div class="paragraph">
+<p>全窗口聚合示意图</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/spaf_0605.png" alt="spaf 0605">
+</div>
+</div>
+<div class="paragraph">
+<p>增量聚合和全窗口聚合结合使用的示意图</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/spaf_0606.png" alt="spaf 0606">
 </div>
 </div>
 <div class="paragraph">
@@ -7808,11 +7834,30 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">case</span> <span class="tok-k">class</span> <span class="tok-nc">ApacheLogEvent</span><span class="tok-o">(</span><span class="tok-n">ip</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">userId</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">eventTime</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">,</span> <span class="tok-n">method</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">url</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">)</span>
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.project</span>
 
-<span class="tok-k">case</span> <span class="tok-k">class</span> <span class="tok-nc">UrlViewCount</span><span class="tok-o">(</span><span class="tok-n">url</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">windowEnd</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">,</span> <span class="tok-n">count</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">)</span>
+<span class="tok-k">import</span> <span class="tok-nn">java.sql.Timestamp</span>
+<span class="tok-k">import</span> <span class="tok-nn">java.text.SimpleDateFormat</span>
 
-<span class="tok-k">object</span> <span class="tok-nc">TrafficAnalysis</span> <span class="tok-o">{</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.common.functions.AggregateFunction</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.common.state.ListStateDescriptor</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.scala.typeutils.Types</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.TimeCharacteristic</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.functions.KeyedProcessFunction</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.scala.function.ProcessWindowFunction</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.windowing.time.Time</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.windowing.windows.TimeWindow</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.util.Collector</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">scala.collection.mutable.ListBuffer</span>
+
+<span class="tok-k">object</span> <span class="tok-nc">ApacheLogAnalysis</span> <span class="tok-o">{</span>
+
+  <span class="tok-k">case</span> <span class="tok-k">class</span> <span class="tok-nc">ApacheLogEvent</span><span class="tok-o">(</span><span class="tok-n">ip</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">userId</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">eventTime</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">,</span> <span class="tok-n">method</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">url</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">)</span>
+
+  <span class="tok-k">case</span> <span class="tok-k">class</span> <span class="tok-nc">UrlViewCount</span><span class="tok-o">(</span><span class="tok-n">url</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">windowEnd</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">,</span> <span class="tok-n">count</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">)</span>
 
   <span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
     <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
@@ -7828,15 +7873,17 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
         <span class="tok-k">val</span> <span class="tok-n">timestamp</span> <span class="tok-k">=</span> <span class="tok-n">simpleDateFormat</span><span class="tok-o">.</span><span class="tok-n">parse</span><span class="tok-o">(</span><span class="tok-n">linearray</span><span class="tok-o">(</span><span class="tok-mi">3</span><span class="tok-o">)).</span><span class="tok-n">getTime</span>
         <span class="tok-nc">ApacheLogEvent</span><span class="tok-o">(</span><span class="tok-n">linearray</span><span class="tok-o">(</span><span class="tok-mi">0</span><span class="tok-o">),</span> <span class="tok-n">linearray</span><span class="tok-o">(</span><span class="tok-mi">2</span><span class="tok-o">),</span> <span class="tok-n">timestamp</span><span class="tok-o">,</span> <span class="tok-n">linearray</span><span class="tok-o">(</span><span class="tok-mi">5</span><span class="tok-o">),</span> <span class="tok-n">linearray</span><span class="tok-o">(</span><span class="tok-mi">6</span><span class="tok-o">))</span>
       <span class="tok-o">})</span>
-      <span class="tok-o">.</span><span class="tok-n">assignTimestampsAndWatermarks</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">BoundedOutOfOrdernessTimestampExtractor</span><span class="tok-o">[</span><span class="tok-kt">ApacheLogEvent</span><span class="tok-o">](</span><span class="tok-nc">Time</span><span class="tok-o">.</span><span class="tok-n">milliseconds</span><span class="tok-o">(</span><span class="tok-mi">1000</span><span class="tok-o">))</span> <span class="tok-o">{</span>
-        <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">extractTimestamp</span><span class="tok-o">(</span><span class="tok-n">t</span><span class="tok-k">:</span> <span class="tok-kt">ApacheLogEvent</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Long</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
-          <span class="tok-n">t</span><span class="tok-o">.</span><span class="tok-n">eventTime</span>
+      <span class="tok-o">.</span><span class="tok-n">assignTimestampsAndWatermarks</span><span class="tok-o">(</span>
+        <span class="tok-k">new</span> <span class="tok-nc">BoundedOutOfOrdernessTimestampExtractor</span><span class="tok-o">[</span><span class="tok-kt">ApacheLogEvent</span><span class="tok-o">](</span><span class="tok-nc">Time</span><span class="tok-o">.</span><span class="tok-n">milliseconds</span><span class="tok-o">(</span><span class="tok-mi">1000</span><span class="tok-o">))</span> <span class="tok-o">{</span>
+          <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">extractTimestamp</span><span class="tok-o">(</span><span class="tok-n">t</span><span class="tok-k">:</span> <span class="tok-kt">ApacheLogEvent</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Long</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+            <span class="tok-n">t</span><span class="tok-o">.</span><span class="tok-n">eventTime</span>
+          <span class="tok-o">}</span>
         <span class="tok-o">}</span>
-      <span class="tok-o">})</span>
-      <span class="tok-o">.</span><span class="tok-n">keyBy</span><span class="tok-o">(</span><span class="tok-s">&quot;url&quot;</span><span class="tok-o">)</span>
+      <span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">keyBy</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">url</span><span class="tok-o">)</span>
       <span class="tok-o">.</span><span class="tok-n">timeWindow</span><span class="tok-o">(</span><span class="tok-nc">Time</span><span class="tok-o">.</span><span class="tok-n">minutes</span><span class="tok-o">(</span><span class="tok-mi">10</span><span class="tok-o">),</span> <span class="tok-nc">Time</span><span class="tok-o">.</span><span class="tok-n">seconds</span><span class="tok-o">(</span><span class="tok-mi">5</span><span class="tok-o">))</span>
       <span class="tok-o">.</span><span class="tok-n">aggregate</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">CountAgg</span><span class="tok-o">(),</span> <span class="tok-k">new</span> <span class="tok-nc">WindowResultFunction</span><span class="tok-o">())</span>
-      <span class="tok-o">.</span><span class="tok-n">keyBy</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">keyBy</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">windowEnd</span><span class="tok-o">)</span>
       <span class="tok-o">.</span><span class="tok-n">process</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">TopNHotUrls</span><span class="tok-o">(</span><span class="tok-mi">5</span><span class="tok-o">))</span>
       <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
 
@@ -7850,30 +7897,25 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
     <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">merge</span><span class="tok-o">(</span><span class="tok-n">acc1</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">,</span> <span class="tok-n">acc2</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Long</span> <span class="tok-o">=</span> <span class="tok-n">acc1</span> <span class="tok-o">+</span> <span class="tok-n">acc2</span>
   <span class="tok-o">}</span>
 
-  <span class="tok-k">class</span> <span class="tok-nc">WindowResultFunction</span> <span class="tok-k">extends</span> <span class="tok-nc">WindowFunction</span><span class="tok-o">[</span><span class="tok-kt">Long</span>, <span class="tok-kt">UrlViewCount</span>, <span class="tok-kt">Tuple</span>, <span class="tok-kt">TimeWindow</span><span class="tok-o">]</span> <span class="tok-o">{</span>
-    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">apply</span><span class="tok-o">(</span><span class="tok-n">key</span><span class="tok-k">:</span> <span class="tok-kt">Tuple</span><span class="tok-o">,</span> <span class="tok-n">window</span><span class="tok-k">:</span> <span class="tok-kt">TimeWindow</span><span class="tok-o">,</span> <span class="tok-n">aggregateResult</span><span class="tok-k">:</span> <span class="tok-kt">Iterable</span><span class="tok-o">[</span><span class="tok-kt">Long</span><span class="tok-o">],</span> <span class="tok-n">collector</span><span class="tok-k">:</span> <span class="tok-kt">Collector</span><span class="tok-o">[</span><span class="tok-kt">UrlViewCount</span><span class="tok-o">])</span> <span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
-      <span class="tok-k">val</span> <span class="tok-n">url</span><span class="tok-k">:</span> <span class="tok-kt">String</span> <span class="tok-o">=</span> <span class="tok-n">key</span><span class="tok-o">.</span><span class="tok-n">asInstanceOf</span><span class="tok-o">[</span><span class="tok-kt">Tuple1</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">]].</span><span class="tok-n">f0</span>
-      <span class="tok-k">val</span> <span class="tok-n">count</span> <span class="tok-k">=</span> <span class="tok-n">aggregateResult</span><span class="tok-o">.</span><span class="tok-n">iterator</span><span class="tok-o">.</span><span class="tok-n">next</span>
-      <span class="tok-n">collector</span><span class="tok-o">.</span><span class="tok-n">collect</span><span class="tok-o">(</span><span class="tok-nc">UrlViewCount</span><span class="tok-o">(</span><span class="tok-n">url</span><span class="tok-o">,</span> <span class="tok-n">window</span><span class="tok-o">.</span><span class="tok-n">getEnd</span><span class="tok-o">,</span> <span class="tok-n">count</span><span class="tok-o">))</span>
+  <span class="tok-k">class</span> <span class="tok-nc">WindowResultFunction</span> <span class="tok-k">extends</span> <span class="tok-nc">ProcessWindowFunction</span><span class="tok-o">[</span><span class="tok-kt">Long</span>, <span class="tok-kt">UrlViewCount</span>, <span class="tok-kt">String</span>, <span class="tok-kt">TimeWindow</span><span class="tok-o">]</span> <span class="tok-o">{</span>
+    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">process</span><span class="tok-o">(</span><span class="tok-n">key</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">,</span> <span class="tok-n">context</span><span class="tok-k">:</span> <span class="tok-kt">Context</span><span class="tok-o">,</span> <span class="tok-n">elements</span><span class="tok-k">:</span> <span class="tok-kt">Iterable</span><span class="tok-o">[</span><span class="tok-kt">Long</span><span class="tok-o">],</span> <span class="tok-n">out</span><span class="tok-k">:</span> <span class="tok-kt">Collector</span><span class="tok-o">[</span><span class="tok-kt">UrlViewCount</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-n">out</span><span class="tok-o">.</span><span class="tok-n">collect</span><span class="tok-o">(</span><span class="tok-nc">UrlViewCount</span><span class="tok-o">(</span><span class="tok-n">key</span><span class="tok-o">,</span> <span class="tok-n">context</span><span class="tok-o">.</span><span class="tok-n">window</span><span class="tok-o">.</span><span class="tok-n">getEnd</span><span class="tok-o">,</span> <span class="tok-n">elements</span><span class="tok-o">.</span><span class="tok-n">iterator</span><span class="tok-o">.</span><span class="tok-n">next</span><span class="tok-o">()))</span>
     <span class="tok-o">}</span>
   <span class="tok-o">}</span>
 
-  <span class="tok-k">class</span> <span class="tok-nc">TopNHotUrls</span><span class="tok-o">(</span><span class="tok-n">topsize</span><span class="tok-k">:</span> <span class="tok-kt">Int</span><span class="tok-o">)</span> <span class="tok-k">extends</span> <span class="tok-nc">KeyedProcessFunction</span><span class="tok-o">[</span><span class="tok-kt">Tuple</span>, <span class="tok-kt">UrlViewCount</span>, <span class="tok-kt">String</span><span class="tok-o">]</span> <span class="tok-o">{</span>
-    <span class="tok-k">private</span> <span class="tok-k">var</span> <span class="tok-n">urlState</span> <span class="tok-k">:</span> <span class="tok-kt">ListState</span><span class="tok-o">[</span><span class="tok-kt">UrlViewCount</span><span class="tok-o">]</span> <span class="tok-k">=</span> <span class="tok-k">_</span>
+  <span class="tok-k">class</span> <span class="tok-nc">TopNHotUrls</span><span class="tok-o">(</span><span class="tok-n">topSize</span><span class="tok-k">:</span> <span class="tok-kt">Int</span><span class="tok-o">)</span> <span class="tok-k">extends</span> <span class="tok-nc">KeyedProcessFunction</span><span class="tok-o">[</span><span class="tok-kt">Long</span>, <span class="tok-kt">UrlViewCount</span>, <span class="tok-kt">String</span><span class="tok-o">]</span> <span class="tok-o">{</span>
 
-    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">open</span><span class="tok-o">(</span><span class="tok-n">parameters</span><span class="tok-k">:</span> <span class="tok-kt">Configuration</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
-      <span class="tok-k">super</span><span class="tok-o">.</span><span class="tok-n">open</span><span class="tok-o">(</span><span class="tok-n">parameters</span><span class="tok-o">)</span>
-      <span class="tok-k">val</span> <span class="tok-n">urlStateDesc</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-nc">ListStateDescriptor</span><span class="tok-o">[</span><span class="tok-kt">UrlViewCount</span><span class="tok-o">](</span><span class="tok-s">&quot;urlState-state&quot;</span><span class="tok-o">,</span> <span class="tok-n">classOf</span><span class="tok-o">[</span><span class="tok-kt">UrlViewCount</span><span class="tok-o">])</span>
-      <span class="tok-n">urlState</span> <span class="tok-k">=</span> <span class="tok-n">getRuntimeContext</span><span class="tok-o">.</span><span class="tok-n">getListState</span><span class="tok-o">(</span><span class="tok-n">urlStateDesc</span><span class="tok-o">)</span>
-    <span class="tok-o">}</span>
+    <span class="tok-k">lazy</span> <span class="tok-k">val</span> <span class="tok-n">urlState</span> <span class="tok-k">=</span> <span class="tok-n">getRuntimeContext</span><span class="tok-o">.</span><span class="tok-n">getListState</span><span class="tok-o">(</span>
+      <span class="tok-k">new</span> <span class="tok-nc">ListStateDescriptor</span><span class="tok-o">[</span><span class="tok-kt">UrlViewCount</span><span class="tok-o">](</span><span class="tok-s">&quot;urlState-state&quot;</span><span class="tok-o">,</span> <span class="tok-nc">Types</span><span class="tok-o">.</span><span class="tok-n">of</span><span class="tok-o">[</span><span class="tok-kt">UrlViewCount</span><span class="tok-o">])</span>
+    <span class="tok-o">)</span>
 
-    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">processElement</span><span class="tok-o">(</span><span class="tok-n">input</span><span class="tok-k">:</span> <span class="tok-kt">UrlViewCount</span><span class="tok-o">,</span> <span class="tok-n">context</span><span class="tok-k">:</span> <span class="tok-kt">KeyedProcessFunction</span><span class="tok-o">[</span><span class="tok-kt">Tuple</span>, <span class="tok-kt">UrlViewCount</span>, <span class="tok-kt">String</span><span class="tok-o">]</span><span class="tok-k">#</span><span class="tok-nc">Context</span><span class="tok-o">,</span> <span class="tok-n">collector</span><span class="tok-k">:</span> <span class="tok-kt">Collector</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">processElement</span><span class="tok-o">(</span><span class="tok-n">input</span><span class="tok-k">:</span> <span class="tok-kt">UrlViewCount</span><span class="tok-o">,</span> <span class="tok-n">context</span><span class="tok-k">:</span> <span class="tok-kt">KeyedProcessFunction</span><span class="tok-o">[</span><span class="tok-kt">Long</span>, <span class="tok-kt">UrlViewCount</span>, <span class="tok-kt">String</span><span class="tok-o">]</span><span class="tok-k">#</span><span class="tok-nc">Context</span><span class="tok-o">,</span> <span class="tok-n">collector</span><span class="tok-k">:</span> <span class="tok-kt">Collector</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
       <span class="tok-c1">// 每条数据都保存到状态中</span>
       <span class="tok-n">urlState</span><span class="tok-o">.</span><span class="tok-n">add</span><span class="tok-o">(</span><span class="tok-n">input</span><span class="tok-o">)</span>
       <span class="tok-n">context</span><span class="tok-o">.</span><span class="tok-n">timerService</span><span class="tok-o">.</span><span class="tok-n">registerEventTimeTimer</span><span class="tok-o">(</span><span class="tok-n">input</span><span class="tok-o">.</span><span class="tok-n">windowEnd</span> <span class="tok-o">+</span> <span class="tok-mi">1</span><span class="tok-o">)</span>
     <span class="tok-o">}</span>
 
-    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">onTimer</span><span class="tok-o">(</span><span class="tok-n">timestamp</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">,</span> <span class="tok-n">ctx</span><span class="tok-k">:</span> <span class="tok-kt">KeyedProcessFunction</span><span class="tok-o">[</span><span class="tok-kt">Tuple</span>, <span class="tok-kt">UrlViewCount</span>, <span class="tok-kt">String</span><span class="tok-o">]</span><span class="tok-k">#</span><span class="tok-nc">OnTimerContext</span><span class="tok-o">,</span> <span class="tok-n">out</span><span class="tok-k">:</span> <span class="tok-kt">Collector</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">onTimer</span><span class="tok-o">(</span><span class="tok-n">timestamp</span><span class="tok-k">:</span> <span class="tok-kt">Long</span><span class="tok-o">,</span> <span class="tok-n">ctx</span><span class="tok-k">:</span> <span class="tok-kt">KeyedProcessFunction</span><span class="tok-o">[</span><span class="tok-kt">Long</span>, <span class="tok-kt">UrlViewCount</span>, <span class="tok-kt">String</span><span class="tok-o">]</span><span class="tok-k">#</span><span class="tok-nc">OnTimerContext</span><span class="tok-o">,</span> <span class="tok-n">out</span><span class="tok-k">:</span> <span class="tok-kt">Collector</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
       <span class="tok-c1">// 获取收到的所有URL访问量</span>
       <span class="tok-k">val</span> <span class="tok-n">allUrlViews</span><span class="tok-k">:</span> <span class="tok-kt">ListBuffer</span><span class="tok-o">[</span><span class="tok-kt">UrlViewCount</span><span class="tok-o">]</span> <span class="tok-k">=</span> <span class="tok-nc">ListBuffer</span><span class="tok-o">()</span>
       <span class="tok-k">import</span> <span class="tok-nn">scala.collection.JavaConversions._</span>
@@ -7884,20 +7926,30 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
       <span class="tok-n">urlState</span><span class="tok-o">.</span><span class="tok-n">clear</span><span class="tok-o">()</span>
       <span class="tok-c1">// 按照访问量从大到小排序</span>
       <span class="tok-k">val</span> <span class="tok-n">sortedUrlViews</span> <span class="tok-k">=</span> <span class="tok-n">allUrlViews</span><span class="tok-o">.</span><span class="tok-n">sortBy</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">count</span><span class="tok-o">)(</span><span class="tok-nc">Ordering</span><span class="tok-o">.</span><span class="tok-nc">Long</span><span class="tok-o">.</span><span class="tok-n">reverse</span><span class="tok-o">)</span>
-<span class="tok-o">.</span><span class="tok-n">take</span><span class="tok-o">(</span><span class="tok-n">topSize</span><span class="tok-o">)</span>
+        <span class="tok-o">.</span><span class="tok-n">take</span><span class="tok-o">(</span><span class="tok-n">topSize</span><span class="tok-o">)</span>
       <span class="tok-c1">// 将排名信息格式化成 String, 便于打印</span>
       <span class="tok-k">var</span> <span class="tok-n">result</span><span class="tok-k">:</span> <span class="tok-kt">StringBuilder</span> <span class="tok-o">=</span> <span class="tok-k">new</span> <span class="tok-nc">StringBuilder</span>
-      <span class="tok-n">result</span><span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;====================================\n&quot;</span><span class="tok-o">)</span>
-      <span class="tok-n">result</span><span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;时间: &quot;</span><span class="tok-o">).</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">Timestamp</span><span class="tok-o">(</span><span class="tok-n">timestamp</span> <span class="tok-o">-</span> <span class="tok-mi">1</span><span class="tok-o">)).</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;\n&quot;</span><span class="tok-o">)</span>
+      <span class="tok-n">result</span>
+        <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;====================================\n&quot;</span><span class="tok-o">)</span>
+        <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;时间: &quot;</span><span class="tok-o">)</span>
+        <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">Timestamp</span><span class="tok-o">(</span><span class="tok-n">timestamp</span> <span class="tok-o">-</span> <span class="tok-mi">1</span><span class="tok-o">))</span>
+        <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;\n&quot;</span><span class="tok-o">)</span>
 
       <span class="tok-k">for</span> <span class="tok-o">(</span><span class="tok-n">i</span> <span class="tok-k">&lt;-</span> <span class="tok-n">sortedUrlViews</span><span class="tok-o">.</span><span class="tok-n">indices</span><span class="tok-o">)</span> <span class="tok-o">{</span>
         <span class="tok-k">val</span> <span class="tok-n">currentUrlView</span><span class="tok-k">:</span> <span class="tok-kt">UrlViewCount</span> <span class="tok-o">=</span> <span class="tok-n">sortedUrlViews</span><span class="tok-o">(</span><span class="tok-n">i</span><span class="tok-o">)</span>
         <span class="tok-c1">// e.g.  No1：  URL=/blog/tags/firefox?flav=rss20  流量=55</span>
-        <span class="tok-n">result</span><span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;No&quot;</span><span class="tok-o">).</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-n">i</span><span class="tok-o">+</span><span class="tok-mi">1</span><span class="tok-o">).</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;:&quot;</span><span class="tok-o">)</span>
-              <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;  URL=&quot;</span><span class="tok-o">).</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-n">currentUrlView</span><span class="tok-o">.</span><span class="tok-n">url</span><span class="tok-o">)</span>
-              <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;  流量=&quot;</span><span class="tok-o">).</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-n">currentUrlView</span><span class="tok-o">.</span><span class="tok-n">count</span><span class="tok-o">).</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;\n&quot;</span><span class="tok-o">)</span>
+        <span class="tok-n">result</span>
+          <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;No&quot;</span><span class="tok-o">)</span>
+          <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-n">i</span> <span class="tok-o">+</span> <span class="tok-mi">1</span><span class="tok-o">)</span>
+          <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;: &quot;</span><span class="tok-o">)</span>
+          <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;  URL=&quot;</span><span class="tok-o">)</span>
+          <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-n">currentUrlView</span><span class="tok-o">.</span><span class="tok-n">url</span><span class="tok-o">)</span>
+          <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;  流量=&quot;</span><span class="tok-o">)</span>
+          <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-n">currentUrlView</span><span class="tok-o">.</span><span class="tok-n">count</span><span class="tok-o">)</span>
+          <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;\n&quot;</span><span class="tok-o">)</span>
       <span class="tok-o">}</span>
-      <span class="tok-n">result</span><span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;====================================\n\n&quot;</span><span class="tok-o">)</span>
+      <span class="tok-n">result</span>
+        <span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-o">(</span><span class="tok-s">&quot;====================================\n\n&quot;</span><span class="tok-o">)</span>
       <span class="tok-c1">// 控制输出频率，模拟实时滚动结果</span>
       <span class="tok-nc">Thread</span><span class="tok-o">.</span><span class="tok-n">sleep</span><span class="tok-o">(</span><span class="tok-mi">1000</span><span class="tok-o">)</span>
       <span class="tok-n">out</span><span class="tok-o">.</span><span class="tok-n">collect</span><span class="tok-o">(</span><span class="tok-n">result</span><span class="tok-o">.</span><span class="tok-n">toString</span><span class="tok-o">)</span>
