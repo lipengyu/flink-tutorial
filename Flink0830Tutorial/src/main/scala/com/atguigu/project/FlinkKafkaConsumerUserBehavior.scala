@@ -3,7 +3,7 @@ package com.atguigu.project
 import java.sql.Timestamp
 import java.util.Properties
 
-import org.apache.flink.api.common.functions.AggregateFunction
+import org.apache.flink.api.common.functions.{AggregateFunction, RuntimeContext}
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.api.common.state.ListStateDescriptor
 import org.apache.flink.api.java.tuple.{Tuple, Tuple1}
@@ -14,8 +14,13 @@ import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
+import org.apache.flink.streaming.connectors.elasticsearch.{ElasticsearchSinkFunction, RequestIndexer}
+import org.apache.flink.streaming.connectors.elasticsearch6.ElasticsearchSink
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer
 import org.apache.flink.util.Collector
+import org.apache.http.HttpHost
+import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.client.Requests
 
 import scala.collection.mutable.ListBuffer
 
@@ -49,6 +54,34 @@ object FlinkKafkaConsumerUserBehavior {
       .process(new UserBehaviorProcessFunction(3))
 
     stream.print()
+
+    val httpHosts = new java.util.ArrayList[HttpHost]
+    httpHosts.add(new HttpHost("localhost", 9200, "http"))
+
+    val esSinkBuilder = new ElasticsearchSink.Builder[String](
+      httpHosts,
+      new ElasticsearchSinkFunction[String] {
+        def createIndexRequest(element: String) : IndexRequest = {
+          val json = new java.util.HashMap[String, String]
+          json.put("slidingwindow", element)
+
+          Requests
+            .indexRequest()
+            .index("user-behavior")
+            .`type`("my-type")
+            .source(json)
+        }
+
+        override def process(t: String, runtimeContext: RuntimeContext, requestIndexer: RequestIndexer): Unit = {
+          requestIndexer.add(createIndexRequest(t))
+        }
+      }
+    )
+
+    // 批量写入es的操作，设置为 1 的意思：来一条数据，往 es 里面写入一条数据
+    esSinkBuilder.setBulkFlushMaxActions(1)
+
+    stream.addSink(esSinkBuilder.build())
 
     env.execute()
   }
