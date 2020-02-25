@@ -19,8 +19,10 @@ import scala.collection.mutable.ListBuffer
 
 object ApacheLogAnalysis {
 
+  // 相当于热门商品中的 UserBehavior 样例类
   case class ApacheLogEvent(ip: String, userId: String, eventTime: Long, method: String, url: String)
 
+  // 相当于热门商品中的 ItemViewCount 样例类
   case class UrlViewCount(url: String, windowEnd: Long, count: Long)
 
   def main(args: Array[String]): Unit = {
@@ -29,7 +31,7 @@ object ApacheLogAnalysis {
     env.setParallelism(1)
     val stream = env
       // 文件的绝对路径
-      .readTextFile("YOUR_PATH\\resources\\apache.log")
+      .readTextFile("/home/parallels/flink-tutorial/Flink0830Tutorial/src/main/resources/apachelog.txt")
       .map(line => {
         val linearray = line.split(" ")
         // 把时间戳ETL成毫秒
@@ -45,7 +47,7 @@ object ApacheLogAnalysis {
         }
       )
       .keyBy(_.url)
-      .timeWindow(Time.minutes(10), Time.seconds(5))
+      .timeWindow(Time.minutes(1), Time.seconds(5))
       .aggregate(new CountAgg(), new WindowResultFunction())
       .keyBy(_.windowEnd)
       .process(new TopNHotUrls(5))
