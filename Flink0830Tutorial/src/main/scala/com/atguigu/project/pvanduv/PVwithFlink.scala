@@ -1,5 +1,6 @@
-package com.atguigu.project
+package com.atguigu.project.pvanduv
 
+import com.atguigu.project.util.UserBehavior
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.scala._

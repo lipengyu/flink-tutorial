@@ -1,4 +1,4 @@
-package com.atguigu.project
+package com.atguigu.project.topnhotitems
 
 import java.util.Properties
 

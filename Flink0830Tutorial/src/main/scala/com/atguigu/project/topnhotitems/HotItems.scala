@@ -1,7 +1,8 @@
-package com.atguigu.project
+package com.atguigu.project.topnhotitems
 
 import java.sql.Timestamp
 
+import com.atguigu.project.util.{ItemViewCount, UserBehavior}
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.api.common.state.ListStateDescriptor
 import org.apache.flink.api.scala.typeutils.Types

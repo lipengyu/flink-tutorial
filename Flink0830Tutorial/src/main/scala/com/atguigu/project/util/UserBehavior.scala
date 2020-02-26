@@ -1,4 +1,4 @@
-package com.atguigu.project
+package com.atguigu.project.util
 
 case class UserBehavior(userId: Long,
                         itemId: Long,

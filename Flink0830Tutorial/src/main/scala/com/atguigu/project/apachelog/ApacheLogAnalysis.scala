@@ -1,4 +1,4 @@
-package com.atguigu.project
+package com.atguigu.project.apachelog
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
