@@ -780,6 +780,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_面试题十一">12.11. 面试题十一</a></li>
 <li><a href="#_面试题十二">12.12. 面试题十二</a></li>
 <li><a href="#_面试题十三">12.13. 面试题十三</a></li>
+<li><a href="#_面试题十四">12.14. 面试题十四</a></li>
+<li><a href="#_面试题十五">12.15. 面试题十五</a></li>
+<li><a href="#_面试题十六">12.16. 面试题十六</a></li>
+<li><a href="#_面试题十七">12.17. 面试题十七</a></li>
 </ul>
 </li>
 </ul>
@@ -8669,7 +8673,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 <p>一，产生数据流的速度如果过快，而下游的算子消费不过来的话，会产生背压问题。背压的监控可以使用Flink Web UI(localhost:8081)来可视化监控，一旦报警就能知道。一般情况下背压问题的产生可能是由于sink这个操作符没有优化好，做一下优化就可以了。比如如果是写入ElasticSearch，那么可以改成批量写入，可以调大ElasticSearch队列的大小等等策略。</p>
 </div>
 <div class="paragraph">
-<p>二，设置水印的最大延迟时间这个参数，如果设置的过大，可能会造成内存的压力。可以设置的最大延迟时间小一些，然后把迟到元素发送到侧输出流中去。晚一点更新结果。或者使用类似于RocksDB这样的状态后端，RocksDB会开辟堆外存储空间，但IO速度会变慢，需要权衡。</p>
+<p>二，设置水位线的最大延迟时间这个参数，如果设置的过大，可能会造成内存的压力。可以设置的最大延迟时间小一些，然后把迟到元素发送到侧输出流中去。晚一点更新结果。或者使用类似于RocksDB这样的状态后端，RocksDB会开辟堆外存储空间，但IO速度会变慢，需要权衡。</p>
 </div>
 <div class="paragraph">
 <p>三，还有就是滑动窗口的长度如果过长，而滑动距离很短的话，Flink的性能会下降的很厉害。</p>
@@ -8734,7 +8738,12 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 <p>问题：Flink的checkpoint机制对比spark有什么不同和优势？</p>
 </div>
 <div class="paragraph">
-<p>解答：spark streaming的Checkpoint仅仅是针对driver的故障恢复做了数据和元数据的Checkpoint。而flink的checkpoint机制要复杂了很多，它采用的是轻量级的分布式快照，实现了每个操作符的快照，及循环流的在循环的数据的快照。参见教材内容和链接：https://cloud.tencent.com/developer/article/1189624</p>
+<p>解答：spark streaming的Checkpoint仅仅是针对driver的故障恢复做了数据和元数据的Checkpoint。而flink的checkpoint机制要复杂了很多，它采用的是轻量级的分布式快照，实现了每个操作符的快照，及循环流的在循环的数据的快照。参见教材内容和链接：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>https://cloud.tencent.com/developer/article/1189624</pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -8793,6 +8802,81 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 <div class="paragraph">
 <p>解答：使用大容量的Kafka把数据先放到消息队列里面。再使用Flink进行消费，不过这样会影响到一点实时性。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_面试题十四">12.14. 面试题十四</h3>
+<div class="paragraph">
+<p>问题：flink消费kakfa保证数据不丢失（flink消费kafka数据不丢不重，flink消费kafka的时候挂了怎么恢复数据）</p>
+</div>
+<div class="paragraph">
+<p>解答：端到端一致性（exactly-once），flink会维护消费kafka的偏移量，checkpoint操作。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_面试题十五">12.15. 面试题十五</h3>
+<div class="paragraph">
+<p>问题：Flink过来的数据量太大怎么处理？</p>
+</div>
+<div class="paragraph">
+<p>解答：加机器，考虑使用处理时间（ProcessingTime），前面使用Kafka来做蓄水池，降低消费数据的速度。尽量使用滚动窗口，窗口没有重合，数据不会复制到不同的窗口中去。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_面试题十六">12.16. 面试题十六</h3>
+<div class="paragraph">
+<p>问题：Kafka每5分钟过来的数据量是多少，flink跑的实时频率，flink topN 跑的频率？</p>
+</div>
+<div class="paragraph">
+<p>解答：我们公司一天数据量是100万，所以我们的窗口大小一般设置为1小时，所以数据量大约在10万条左右。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_面试题十七">12.17. 面试题十七</h3>
+<div class="paragraph">
+<p>问题：Flink的资源是如何设置的，设置资源的时候依据是什么？</p>
+</div>
+<div class="paragraph">
+<p>解答：我们公司购买的云计算资源比较多，所以跑平常的任务没有发现什么问题。会提前mock比较大的数据量，做一下压力测试，然后决定使用多少资源。</p>
+</div>
+<div class="paragraph">
+<p>以下6个方面是确定 Flink 集群大小时最先要考虑的一些因素：</p>
+</div>
+<div class="paragraph">
+<p>记录数和每条记录的大小</p>
+</div>
+<div class="paragraph">
+<p>确定集群大小的首要事情就是估算预期进入流计算系统的每秒记录数（也就是我们常说的吞吐量），以及每条记录的大小。不同的记录类型会有不同的大小，这将最终影响 Flink 应用程序平稳运行所需的资源。</p>
+</div>
+<div class="paragraph">
+<p>不同 key 的数量和每个 key 存储的 state 大小</p>
+</div>
+<div class="paragraph">
+<p>应用程序中不同 key 的数量和每个 key 所需要存储的 state 大小，都将影响到 Flink 应用程序所需的资源，从而能高效地运行，避免任何反压。</p>
+</div>
+<div class="paragraph">
+<p>状态的更新频率和状态后端的访问模式</p>
+</div>
+<div class="paragraph">
+<p>第三个考虑因素是状态的更新频率，因为状态的更新通常是一个高消耗的动作。而不同的状态后端（如 RocksDB，Java Heap）的访问模式差异很大，RocksDB 的每次读取和更新都会涉及序列化和反序列化以及 JNI 操作，而 Java Heap 的状态后端不支持增量 checkpoint，导致大状态场景需要每次持久化的数据量较大。这些因素都会显著地影响集群的大小和 Flink 作业所需的资源。</p>
+</div>
+<div class="paragraph">
+<p>网络容量</p>
+</div>
+<div class="paragraph">
+<p>网络容量不仅仅会收到 Flink 应用程序本身的影响，也会受到可能正在交互的 Kafka、HDFS 等外部服务的影响。这些外部服务可能会导致额外的网络流量。例如，启用 replication 可能会在网络的消息 broker 之间产生额外的流量。</p>
+</div>
+<div class="paragraph">
+<p>磁盘带宽</p>
+</div>
+<div class="paragraph">
+<p>如果你的应用程序依赖了基于磁盘的状态后端，如 RocksDB，或者考虑使用 Kafka 或 HDFS，那么磁盘的带宽也需要纳入考虑。</p>
+</div>
+<div class="paragraph">
+<p>机器数量及其可用 CPU 和内存</p>
+</div>
+<div class="paragraph">
+<p>最后但并非最不重要的，在开始应用部署前，你需要考虑集群中可用机器的数量及其可用的 CPU 和内存。这最终确保了在将应用程序投入生产之后，集群有充足的处理能力。</p>
 </div>
 </div>
 </div>
