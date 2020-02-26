@@ -15,7 +15,11 @@ object UvWithBloomFilter {
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
     env.setParallelism(1)
 
-    val stream = env.readTextFile("/home/parallels/flink-tutorial/Flink0830Tutorial/src/main/resources/UserBehavior.csv")
+//    val stream = env.readTextFile("/home/parallels/flink-tutorial/Flink0830Tutorial/src/main/resources/UserBehavior.csv")
+    // 1,1,1,pv,1
+    // 2,1,1,pv,3
+    // 1,1,1,pv,10000
+    val stream = env.socketTextStream("localhost", 9999, '\n')
 
     stream
       .map(r => {
@@ -38,6 +42,7 @@ object UvWithBloomFilter {
     // 每来一条数据都会触发一次ProcessWindowFunction函数的执行
     override def onElement(element: (String, Long), timestamp: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
       // 触发窗口计算并清空窗口的元素
+      ctx.registerEventTimeTimer(window.getEnd)
       TriggerResult.FIRE_AND_PURGE
     }
 
@@ -46,11 +51,11 @@ object UvWithBloomFilter {
     }
 
     override def onEventTime(time: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
-      if (ctx.getCurrentWatermark >= window.getEnd) {
+      if (time == window.getEnd) {
         val jedis = new Jedis("localhost", 6379)
         val key = window.getEnd.toString
-        TriggerResult.FIRE_AND_PURGE
         println(key, jedis.hget("UvCountHashTable", key))
+        TriggerResult.FIRE_AND_PURGE
       }
       TriggerResult.CONTINUE
     }
