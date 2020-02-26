@@ -39,6 +39,7 @@ object OrderTimeoutWithCEP {
 
     val selectFunction = (map: scala.collection.Map[String, Iterable[OrderEvent]], out: Collector[OrderEvent]) => {}
 
+    // 接受参数的方式是柯里化的，第一个参数：侧输出标签；第二个参数：超时事件处理函数；第三个参数：正常事件处理函数
     val timeoutOrder = patternStream.flatSelect(orderTimeoutOutput)(timeoutFunction)(selectFunction)
 
     timeoutOrder.getSideOutput(orderTimeoutOutput).print()
