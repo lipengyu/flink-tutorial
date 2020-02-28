@@ -5,16 +5,17 @@ class QuickSelect {
         int[] arr = {2, 8, 7, 1, 3, 5, 6, 4};
         System.out.println(quickSelect(arr, 5,0, 7));
     }
+    // T(N) = T(N/2) + O(N) = O(N)
     public static int quickSelect(int[] A, int k, int p, int r) {
         if (p <= r) {
             // q是哨兵的索引
-            int q = partition(A, p, r);
+            int q = partition(A, p, r); // O(N)
             if (k - 1 == q) {
                 return A[q];
             } else if (k - 1 < q) {
-                return quickSelect(A, k, p, q - 1);
+                return quickSelect(A, k, p, q - 1); // T(N/2)
             } else {
-                return quickSelect(A, k, q + 1, r);
+                return quickSelect(A, k, q + 1, r); // T(N/2)
             }
         }
         return A[p];
