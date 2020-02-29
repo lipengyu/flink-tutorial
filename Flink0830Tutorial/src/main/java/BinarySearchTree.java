@@ -8,6 +8,7 @@ class BinarySearchTree {
 
     public static void main(String[] args) {
         TreeNode root = new TreeNode(5);
+        insert(root, 3);
     }
 
     public static boolean search(TreeNode root, int val) {
@@ -21,5 +22,25 @@ class BinarySearchTree {
             }
         }
         return false;
+    }
+
+    public static void insert(TreeNode root, int val) {
+        TreeNode x = root;
+        while (x != null) {
+            if (x.val > val) {
+                if (x.left == null) {
+                    x.left = new TreeNode(val);
+                    return;
+                }
+                insert(x.left, val);
+            } else if (x.val < val) {
+                if (x.right == null) {
+                    x.right = new TreeNode(val);
+                    return;
+                }
+                insert(x.right, val);
+
+            }
+        }
     }
 }
