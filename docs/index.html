@@ -742,48 +742,63 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </li>
 <li><a href="#_flink_cep简介">10. Flink CEP简介</a></li>
-<li><a href="#_尚硅谷大数据技术之电商用户行为分析">11. 尚硅谷大数据技术之电商用户行为分析</a>
+<li><a href="#_flink_table_api_sql">11. Flink Table API &amp; SQL</a>
 <ul class="sectlevel2">
-<li><a href="#_数据集解析">11.1. 数据集解析</a>
+<li><a href="#_导入依赖">11.1. 导入依赖</a></li>
+<li><a href="#_使用table_api结合sql实现topn需求">11.2. 使用Table API结合SQL实现TopN需求</a></li>
+<li><a href="#_只使用flink_sql实现topn需求">11.3. 只使用Flink SQL实现TopN需求</a></li>
+<li><a href="#_用户自定义函数">11.4. 用户自定义函数</a>
 <ul class="sectlevel3">
-<li><a href="#_淘宝数据集解析">11.1.1. 淘宝数据集解析</a></li>
-<li><a href="#_apache服务器日志数据集解析">11.1.2. Apache服务器日志数据集解析</a></li>
+<li><a href="#_scalar_functions">11.4.1. Scalar Functions</a></li>
+<li><a href="#_table_functions">11.4.2. Table Functions</a></li>
+<li><a href="#_aggregation_functions">11.4.3. Aggregation Functions</a></li>
+<li><a href="#_table_aggregation_functions">11.4.4. Table Aggregation Functions</a></li>
 </ul>
 </li>
-<li><a href="#_实时热门商品统计">11.2. 实时热门商品统计</a></li>
-<li><a href="#_实时流量统计">11.3. 实时流量统计</a></li>
-<li><a href="#_uv统计的布隆过滤器实现">11.4. Uv统计的布隆过滤器实现</a></li>
-<li><a href="#_app分渠道数据统计">11.5. APP分渠道数据统计</a></li>
-<li><a href="#_app不分渠道数据统计">11.6. APP不分渠道数据统计</a></li>
-<li><a href="#_恶意登陆实现">11.7. 恶意登陆实现</a></li>
-<li><a href="#_订单支付实时监控">11.8. 订单支付实时监控</a>
-<ul class="sectlevel3">
-<li><a href="#_使用flink_cep来实现">11.8.1. 使用Flink CEP来实现</a></li>
-<li><a href="#_使用process_function实现订单超时需求">11.8.2. 使用Process Function实现订单超时需求</a></li>
 </ul>
 </li>
-<li><a href="#_实现两条流的join">11.9. 实现两条流的Join</a></li>
-</ul>
-</li>
-<li><a href="#_常见面试题解答">12. 常见面试题解答</a>
+<li><a href="#_尚硅谷大数据技术之电商用户行为分析">12. 尚硅谷大数据技术之电商用户行为分析</a>
 <ul class="sectlevel2">
-<li><a href="#_面试题一">12.1. 面试题一</a></li>
-<li><a href="#_面试题二">12.2. 面试题二</a></li>
-<li><a href="#_面试题三">12.3. 面试题三</a></li>
-<li><a href="#_面试题四">12.4. 面试题四</a></li>
-<li><a href="#_面试题五">12.5. 面试题五</a></li>
-<li><a href="#_面试题六">12.6. 面试题六</a></li>
-<li><a href="#_面试题七">12.7. 面试题七</a></li>
-<li><a href="#_面试题八">12.8. 面试题八</a></li>
-<li><a href="#_面试题九">12.9. 面试题九</a></li>
-<li><a href="#_面试题十">12.10. 面试题十</a></li>
-<li><a href="#_面试题十一">12.11. 面试题十一</a></li>
-<li><a href="#_面试题十二">12.12. 面试题十二</a></li>
-<li><a href="#_面试题十三">12.13. 面试题十三</a></li>
-<li><a href="#_面试题十四">12.14. 面试题十四</a></li>
-<li><a href="#_面试题十五">12.15. 面试题十五</a></li>
-<li><a href="#_面试题十六">12.16. 面试题十六</a></li>
-<li><a href="#_面试题十七">12.17. 面试题十七</a></li>
+<li><a href="#_数据集解析">12.1. 数据集解析</a>
+<ul class="sectlevel3">
+<li><a href="#_淘宝数据集解析">12.1.1. 淘宝数据集解析</a></li>
+<li><a href="#_apache服务器日志数据集解析">12.1.2. Apache服务器日志数据集解析</a></li>
+</ul>
+</li>
+<li><a href="#_实时热门商品统计">12.2. 实时热门商品统计</a></li>
+<li><a href="#_实时流量统计">12.3. 实时流量统计</a></li>
+<li><a href="#_uv统计的布隆过滤器实现">12.4. Uv统计的布隆过滤器实现</a></li>
+<li><a href="#_app分渠道数据统计">12.5. APP分渠道数据统计</a></li>
+<li><a href="#_app不分渠道数据统计">12.6. APP不分渠道数据统计</a></li>
+<li><a href="#_恶意登陆实现">12.7. 恶意登陆实现</a></li>
+<li><a href="#_订单支付实时监控">12.8. 订单支付实时监控</a>
+<ul class="sectlevel3">
+<li><a href="#_使用flink_cep来实现">12.8.1. 使用Flink CEP来实现</a></li>
+<li><a href="#_使用process_function实现订单超时需求">12.8.2. 使用Process Function实现订单超时需求</a></li>
+</ul>
+</li>
+<li><a href="#_实现两条流的join">12.9. 实现两条流的Join</a></li>
+</ul>
+</li>
+<li><a href="#_常见面试题解答">13. 常见面试题解答</a>
+<ul class="sectlevel2">
+<li><a href="#_面试题一">13.1. 面试题一</a></li>
+<li><a href="#_面试题二">13.2. 面试题二</a></li>
+<li><a href="#_面试题三">13.3. 面试题三</a></li>
+<li><a href="#_面试题四">13.4. 面试题四</a></li>
+<li><a href="#_面试题五">13.5. 面试题五</a></li>
+<li><a href="#_面试题六">13.6. 面试题六</a></li>
+<li><a href="#_面试题七">13.7. 面试题七</a></li>
+<li><a href="#_面试题八">13.8. 面试题八</a></li>
+<li><a href="#_面试题九">13.9. 面试题九</a></li>
+<li><a href="#_面试题十">13.10. 面试题十</a></li>
+<li><a href="#_面试题十一">13.11. 面试题十一</a></li>
+<li><a href="#_面试题十二">13.12. 面试题十二</a></li>
+<li><a href="#_面试题十三">13.13. 面试题十三</a></li>
+<li><a href="#_面试题十四">13.14. 面试题十四</a></li>
+<li><a href="#_面试题十五">13.15. 面试题十五</a></li>
+<li><a href="#_面试题十六">13.16. 面试题十六</a></li>
+<li><a href="#_面试题十七">13.17. 面试题十七</a></li>
 </ul>
 </li>
 </ul>
@@ -7383,12 +7398,509 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect1">
-<h2 id="_尚硅谷大数据技术之电商用户行为分析">11. 尚硅谷大数据技术之电商用户行为分析</h2>
+<h2 id="_flink_table_api_sql">11. Flink Table API &amp; SQL</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_数据集解析">11.1. 数据集解析</h3>
+<h3 id="_导入依赖">11.1. 导入依赖</h3>
+<div class="paragraph">
+<p>根据使用的语言不同（Java，Scala），以下依赖选择一个使用。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="xml"><span></span><span class="tok-c">&lt;!-- Either... --&gt;</span>
+<span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>org.apache.flink<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>flink-table-api-java-bridge_2.11<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>1.10.0<span class="tok-nt">&lt;/version&gt;</span>
+  <span class="tok-nt">&lt;scope&gt;</span>provided<span class="tok-nt">&lt;/scope&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span>
+<span class="tok-c">&lt;!-- or... --&gt;</span>
+<span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>org.apache.flink<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>flink-table-api-scala-bridge_2.11<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>1.10.0<span class="tok-nt">&lt;/version&gt;</span>
+  <span class="tok-nt">&lt;scope&gt;</span>provided<span class="tok-nt">&lt;/scope&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>如果想兼容以前写的代码，可以使用下面的第一个依赖；如果想要使用阿里巴巴开发的一些新特性（TopN之类的），可以选择第二个依赖。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="xml"><span></span><span class="tok-c">&lt;!-- Either... (for the old planner that was available before Flink 1.9) --&gt;</span>
+<span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>org.apache.flink<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>flink-table-planner_2.11<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>1.10.0<span class="tok-nt">&lt;/version&gt;</span>
+  <span class="tok-nt">&lt;scope&gt;</span>provided<span class="tok-nt">&lt;/scope&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span>
+<span class="tok-c">&lt;!-- or.. (for the new Blink planner) --&gt;</span>
+<span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>org.apache.flink<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>flink-table-planner-blink_2.11<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>1.10.0<span class="tok-nt">&lt;/version&gt;</span>
+  <span class="tok-nt">&lt;scope&gt;</span>provided<span class="tok-nt">&lt;/scope&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>如果想要实现一些用户自定义函数（UDF），添加下面的依赖</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="xml"><span></span><span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>org.apache.flink<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>flink-table-common<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>1.10.0<span class="tok-nt">&lt;/version&gt;</span>
+  <span class="tok-nt">&lt;scope&gt;</span>provided<span class="tok-nt">&lt;/scope&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_使用table_api结合sql实现topn需求">11.2. 使用Table API结合SQL实现TopN需求</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.project.topnhotitems</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">java.sql.Timestamp</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">com.atguigu.project.util.UserBehavior</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.TimeCharacteristic</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.scala.StreamExecutionEnvironment</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.</span><span class="tok-o">{</span><span class="tok-nc">EnvironmentSettings</span><span class="tok-o">,</span> <span class="tok-nc">Tumble</span><span class="tok-o">}</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.scala._</span>
+
+<span class="tok-k">object</span> <span class="tok-nc">HotItemsTable</span> <span class="tok-o">{</span>
+
+  <span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+
+    <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+    <span class="tok-c1">// 有关Blink的配置，样板代码</span>
+    <span class="tok-k">val</span> <span class="tok-n">settings</span> <span class="tok-k">=</span> <span class="tok-nc">EnvironmentSettings</span><span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">useBlinkPlanner</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+    <span class="tok-c1">// 创建流式表的环境</span>
+    <span class="tok-k">val</span> <span class="tok-n">tEnv</span> <span class="tok-k">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+    <span class="tok-c1">// 使用事件时间</span>
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setStreamTimeCharacteristic</span><span class="tok-o">(</span><span class="tok-nc">TimeCharacteristic</span><span class="tok-o">.</span><span class="tok-nc">EventTime</span><span class="tok-o">)</span>
+    <span class="tok-c1">// 过滤出pv事件，并抽取时间戳</span>
+    <span class="tok-k">val</span> <span class="tok-n">stream</span> <span class="tok-k">=</span> <span class="tok-n">env</span>
+      <span class="tok-o">.</span><span class="tok-n">readTextFile</span><span class="tok-o">(</span><span class="tok-s">&quot;/home/parallels/flink-tutorial/Flink0830Tutorial/src/main/resources/UserBehavior.csv&quot;</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-n">line</span> <span class="tok-k">=&gt;</span> <span class="tok-o">{</span>
+        <span class="tok-k">val</span> <span class="tok-n">arr</span> <span class="tok-k">=</span> <span class="tok-n">line</span><span class="tok-o">.</span><span class="tok-n">split</span><span class="tok-o">(</span><span class="tok-s">&quot;,&quot;</span><span class="tok-o">)</span>
+        <span class="tok-nc">UserBehavior</span><span class="tok-o">(</span><span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">0</span><span class="tok-o">).</span><span class="tok-n">toLong</span><span class="tok-o">,</span> <span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">).</span><span class="tok-n">toLong</span><span class="tok-o">,</span> <span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">2</span><span class="tok-o">).</span><span class="tok-n">toInt</span><span class="tok-o">,</span> <span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">3</span><span class="tok-o">),</span> <span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">4</span><span class="tok-o">).</span><span class="tok-n">toLong</span> <span class="tok-o">*</span> <span class="tok-mi">1000</span><span class="tok-o">)</span>
+      <span class="tok-o">})</span>
+      <span class="tok-o">.</span><span class="tok-n">filter</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">behavior</span> <span class="tok-o">==</span> <span class="tok-s">&quot;pv&quot;</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">assignAscendingTimestamps</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">timestamp</span><span class="tok-o">)</span>
+
+    <span class="tok-c1">// 从流中提取两个字段，时间戳；itemId，组成一张表</span>
+    <span class="tok-k">val</span> <span class="tok-n">table</span> <span class="tok-k">=</span> <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">stream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;timestamp</span><span class="tok-o">.</span><span class="tok-n">rowtime</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;itemId</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">t</span> <span class="tok-k">=</span> <span class="tok-n">table</span>
+      <span class="tok-o">.</span><span class="tok-n">window</span><span class="tok-o">(</span><span class="tok-nc">Tumble</span> <span class="tok-n">over</span> <span class="tok-mf">60.</span><span class="tok-n">minutes</span> <span class="tok-n">on</span> <span class=" tok--Symbol">&#39;timestamp</span> <span class="tok-n">as</span> <span class=" tok--Symbol">&#39;w</span><span class="tok-o">)</span> <span class="tok-c1">// 一小时滚动窗口</span>
+      <span class="tok-o">.</span><span class="tok-n">groupBy</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;itemId</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;w</span><span class="tok-o">)</span>                               <span class="tok-c1">// 根据itemId和窗口进行分组</span>
+      <span class="tok-o">.</span><span class="tok-n">aggregate</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;itemId</span><span class="tok-o">.</span><span class="tok-n">count</span> <span class="tok-n">as</span> <span class=" tok--Symbol">&#39;icount</span><span class="tok-o">)</span>                <span class="tok-c1">// 对itemId进行计数</span>
+      <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;itemId</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;icount</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;w</span><span class="tok-o">.</span><span class="tok-n">end</span> <span class="tok-n">as</span> <span class=" tok--Symbol">&#39;windowEnd</span><span class="tok-o">)</span>     <span class="tok-c1">// 查询三个字段</span>
+      <span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">Long</span>, <span class="tok-kt">Long</span>, <span class="tok-kt">Timestamp</span><span class="tok-o">)]</span>            <span class="tok-c1">// 转换成DataStream</span>
+
+    <span class="tok-c1">// 创建临时表</span>
+    <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">createTemporaryView</span><span class="tok-o">(</span><span class="tok-s">&quot;topn&quot;</span><span class="tok-o">,</span> <span class="tok-n">t</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;itemId</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;icount</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;windowEnd</span><span class="tok-o">)</span>
+
+    <span class="tok-c1">// topN查询，Blink支持的特性</span>
+    <span class="tok-k">val</span> <span class="tok-n">result</span> <span class="tok-k">=</span> <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">sqlQuery</span><span class="tok-o">(</span>
+      <span class="tok-s">&quot;&quot;&quot;</span>
+<span class="tok-s">        |SELECT *</span>
+<span class="tok-s">        |FROM (</span>
+<span class="tok-s">        |    SELECT *,</span>
+<span class="tok-s">        |        ROW_NUMBER() OVER (PARTITION BY windowEnd ORDER BY icount DESC) as row_num</span>
+<span class="tok-s">        |    FROM topn)</span>
+<span class="tok-s">        |WHERE row_num &lt;= 5</span>
+<span class="tok-s">        |&quot;&quot;&quot;</span><span class="tok-o">.</span><span class="tok-n">stripMargin</span>
+    <span class="tok-o">)</span>
+    <span class="tok-c1">// 使用toRetractStream转换成DataStream，用来实时更新排行榜</span>
+    <span class="tok-c1">// true代表insert, false代表delete</span>
+    <span class="tok-n">result</span><span class="tok-o">.</span><span class="tok-n">toRetractStream</span><span class="tok-o">[(</span><span class="tok-kt">Long</span>, <span class="tok-kt">Long</span>, <span class="tok-kt">Timestamp</span>, <span class="tok-kt">Long</span><span class="tok-o">)].</span><span class="tok-n">print</span><span class="tok-o">()</span>
+
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">()</span>
+  <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_只使用flink_sql实现topn需求">11.3. 只使用Flink SQL实现TopN需求</h3>
+<div class="paragraph">
+<p>代码</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.project.topnhotitems</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">java.sql.Timestamp</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">com.atguigu.project.util.UserBehavior</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.TimeCharacteristic</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.scala.StreamExecutionEnvironment</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.</span><span class="tok-o">{</span><span class="tok-nc">EnvironmentSettings</span><span class="tok-o">,</span> <span class="tok-nc">Tumble</span><span class="tok-o">}</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.scala._</span>
+
+<span class="tok-k">object</span> <span class="tok-nc">HotItemsSQL</span> <span class="tok-o">{</span>
+
+  <span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+
+    <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+    <span class="tok-k">val</span> <span class="tok-n">settings</span> <span class="tok-k">=</span> <span class="tok-nc">EnvironmentSettings</span><span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">useBlinkPlanner</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+    <span class="tok-k">val</span> <span class="tok-n">tEnv</span> <span class="tok-k">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setStreamTimeCharacteristic</span><span class="tok-o">(</span><span class="tok-nc">TimeCharacteristic</span><span class="tok-o">.</span><span class="tok-nc">EventTime</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">stream</span> <span class="tok-k">=</span> <span class="tok-n">env</span>
+      <span class="tok-o">.</span><span class="tok-n">readTextFile</span><span class="tok-o">(</span><span class="tok-s">&quot;/home/parallels/flink-tutorial/Flink0830Tutorial/src/main/resources/UserBehavior.csv&quot;</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-n">line</span> <span class="tok-k">=&gt;</span> <span class="tok-o">{</span>
+        <span class="tok-k">val</span> <span class="tok-n">arr</span> <span class="tok-k">=</span> <span class="tok-n">line</span><span class="tok-o">.</span><span class="tok-n">split</span><span class="tok-o">(</span><span class="tok-s">&quot;,&quot;</span><span class="tok-o">)</span>
+        <span class="tok-nc">UserBehavior</span><span class="tok-o">(</span><span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">0</span><span class="tok-o">).</span><span class="tok-n">toLong</span><span class="tok-o">,</span> <span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">).</span><span class="tok-n">toLong</span><span class="tok-o">,</span> <span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">2</span><span class="tok-o">).</span><span class="tok-n">toInt</span><span class="tok-o">,</span> <span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">3</span><span class="tok-o">),</span> <span class="tok-n">arr</span><span class="tok-o">(</span><span class="tok-mi">4</span><span class="tok-o">).</span><span class="tok-n">toLong</span> <span class="tok-o">*</span> <span class="tok-mi">1000</span><span class="tok-o">)</span>
+      <span class="tok-o">})</span>
+      <span class="tok-o">.</span><span class="tok-n">filter</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">behavior</span> <span class="tok-o">==</span> <span class="tok-s">&quot;pv&quot;</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">assignAscendingTimestamps</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">timestamp</span><span class="tok-o">)</span>
+
+    <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">createTemporaryView</span><span class="tok-o">(</span><span class="tok-s">&quot;t&quot;</span><span class="tok-o">,</span> <span class="tok-n">stream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;itemId</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;timestamp</span><span class="tok-o">.</span><span class="tok-n">rowtime</span> <span class="tok-n">as</span> <span class=" tok--Symbol">&#39;ts</span><span class="tok-o">)</span>
+
+    <span class="tok-k">val</span> <span class="tok-n">result</span> <span class="tok-k">=</span> <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">sqlQuery</span><span class="tok-o">(</span>
+      <span class="tok-s">&quot;&quot;&quot;</span>
+<span class="tok-s">        |SELECT *</span>
+<span class="tok-s">        |FROM (</span>
+<span class="tok-s">        |    SELECT *,</span>
+<span class="tok-s">        |        ROW_NUMBER() OVER (PARTITION BY windowEnd ORDER BY icount DESC) as row_num</span>
+<span class="tok-s">        |    FROM (SELECT count(itemId) as icount, TUMBLE_START(ts, INTERVAL &#39;1&#39; HOUR) as windowEnd FROM t GROUP BY TUMBLE(ts, INTERVAL &#39;1&#39; HOUR), itemId) topn)</span>
+<span class="tok-s">        |WHERE row_num &lt;= 5</span>
+<span class="tok-s">        |&quot;&quot;&quot;</span><span class="tok-o">.</span><span class="tok-n">stripMargin</span>
+    <span class="tok-o">)</span>
+    <span class="tok-n">result</span><span class="tok-o">.</span><span class="tok-n">toRetractStream</span><span class="tok-o">[(</span><span class="tok-kt">Long</span>, <span class="tok-kt">Timestamp</span>, <span class="tok-kt">Long</span><span class="tok-o">)].</span><span class="tok-n">print</span><span class="tok-o">()</span>
+
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">()</span>
+  <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_用户自定义函数">11.4. 用户自定义函数</h3>
 <div class="sect3">
-<h4 id="_淘宝数据集解析">11.1.1. 淘宝数据集解析</h4>
+<h4 id="_scalar_functions">11.4.1. Scalar Functions</h4>
+<div class="paragraph">
+<p>例子</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.course</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.scala.StreamExecutionEnvironment</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.</span><span class="tok-o">{</span><span class="tok-nc">EnvironmentSettings</span><span class="tok-o">,</span> <span class="tok-nc">Tumble</span><span class="tok-o">}</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.functions.ScalarFunction</span>
+
+<span class="tok-k">object</span> <span class="tok-nc">TableUDFExample1</span> <span class="tok-o">{</span>
+  <span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+    <span class="tok-k">val</span> <span class="tok-n">settings</span> <span class="tok-k">=</span> <span class="tok-nc">EnvironmentSettings</span><span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">useBlinkPlanner</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+    <span class="tok-k">val</span> <span class="tok-n">tEnv</span> <span class="tok-k">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">stream</span> <span class="tok-k">=</span> <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">addSource</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">SensorSource</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">hashCode</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-nc">HashCode</span><span class="tok-o">(</span><span class="tok-mi">10</span><span class="tok-o">)</span>
+    <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">registerFunction</span><span class="tok-o">(</span><span class="tok-s">&quot;hashCode&quot;</span><span class="tok-o">,</span> <span class="tok-k">new</span> <span class="tok-nc">HashCode</span><span class="tok-o">(</span><span class="tok-mi">10</span><span class="tok-o">))</span>
+    <span class="tok-k">val</span> <span class="tok-n">table</span> <span class="tok-k">=</span> <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">stream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">)</span>
+    <span class="tok-c1">// table api 写法</span>
+    <span class="tok-n">table</span>
+      <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class="tok-n">hashCode</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">))</span>
+      <span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">Int</span><span class="tok-o">)]</span>
+      <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+
+    <span class="tok-c1">// sql 写法</span>
+    <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">createTemporaryView</span><span class="tok-o">(</span><span class="tok-s">&quot;t&quot;</span><span class="tok-o">,</span> <span class="tok-n">table</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">)</span>
+    <span class="tok-n">tEnv</span>
+      <span class="tok-o">.</span><span class="tok-n">sqlQuery</span><span class="tok-o">(</span><span class="tok-s">&quot;SELECT id, hashCode(id) FROM t&quot;</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">Int</span><span class="tok-o">)]</span>
+      <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">()</span>
+  <span class="tok-o">}</span>
+
+  <span class="tok-k">class</span> <span class="tok-nc">HashCode</span><span class="tok-o">(</span><span class="tok-n">factor</span><span class="tok-k">:</span> <span class="tok-kt">Int</span><span class="tok-o">)</span> <span class="tok-k">extends</span> <span class="tok-nc">ScalarFunction</span> <span class="tok-o">{</span>
+    <span class="tok-k">def</span> <span class="tok-n">eval</span><span class="tok-o">(</span><span class="tok-n">s</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Int</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-n">s</span><span class="tok-o">.</span><span class="tok-n">hashCode</span><span class="tok-o">()</span> <span class="tok-o">*</span> <span class="tok-n">factor</span>
+    <span class="tok-o">}</span>
+  <span class="tok-o">}</span>
+
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_table_functions">11.4.2. Table Functions</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.course</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.scala.StreamExecutionEnvironment</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.</span><span class="tok-o">{</span><span class="tok-nc">EnvironmentSettings</span><span class="tok-o">,</span> <span class="tok-nc">Tumble</span><span class="tok-o">}</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.functions.TableFunction</span>
+
+<span class="tok-k">object</span> <span class="tok-nc">TableUDFExample2</span> <span class="tok-o">{</span>
+  <span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+    <span class="tok-k">val</span> <span class="tok-n">settings</span> <span class="tok-k">=</span> <span class="tok-nc">EnvironmentSettings</span><span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">useBlinkPlanner</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+    <span class="tok-k">val</span> <span class="tok-n">tEnv</span> <span class="tok-k">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">split</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-nc">Split</span><span class="tok-o">(</span><span class="tok-s">&quot;#&quot;</span><span class="tok-o">)</span>
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">stream</span> <span class="tok-k">=</span> <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">fromElements</span><span class="tok-o">(</span>
+      <span class="tok-s">&quot;hello#world&quot;</span>
+    <span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">table</span> <span class="tok-k">=</span> <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">stream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;s</span><span class="tok-o">)</span>
+    <span class="tok-c1">// table api 写法</span>
+    <span class="tok-n">table</span>
+      <span class="tok-o">.</span><span class="tok-n">joinLateral</span><span class="tok-o">(</span><span class="tok-n">split</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;s</span><span class="tok-o">)</span> <span class="tok-n">as</span> <span class="tok-o">(</span><span class=" tok--Symbol">&#39;word</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;length</span><span class="tok-o">))</span>
+      <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;s</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;word</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;length</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">String</span>, <span class="tok-kt">Long</span><span class="tok-o">)]</span>
+      <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+    <span class="tok-n">table</span>
+      <span class="tok-o">.</span><span class="tok-n">leftOuterJoinLateral</span><span class="tok-o">(</span><span class="tok-n">split</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;s</span><span class="tok-o">)</span> <span class="tok-n">as</span> <span class="tok-o">(</span><span class=" tok--Symbol">&#39;word</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;length</span><span class="tok-o">))</span>
+      <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;s</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;word</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;length</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">String</span>, <span class="tok-kt">Long</span><span class="tok-o">)]</span>
+      <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+
+    <span class="tok-c1">// sql 写法</span>
+    <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">registerFunction</span><span class="tok-o">(</span><span class="tok-s">&quot;split&quot;</span><span class="tok-o">,</span> <span class="tok-k">new</span> <span class="tok-nc">Split</span><span class="tok-o">(</span><span class="tok-s">&quot;#&quot;</span><span class="tok-o">))</span>
+
+    <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">createTemporaryView</span><span class="tok-o">(</span><span class="tok-s">&quot;t&quot;</span><span class="tok-o">,</span> <span class="tok-n">table</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;s</span><span class="tok-o">)</span>
+
+    <span class="tok-c1">// Use the table function in SQL with LATERAL and TABLE keywords.</span>
+    <span class="tok-c1">// CROSS JOIN a table function (equivalent to &quot;join&quot; in Table API)</span>
+    <span class="tok-n">tEnv</span>
+      <span class="tok-o">.</span><span class="tok-n">sqlQuery</span><span class="tok-o">(</span><span class="tok-s">&quot;SELECT s, word, length FROM t, LATERAL TABLE(split(s)) as T(word, length)&quot;</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">String</span>, <span class="tok-kt">Int</span><span class="tok-o">)]</span>
+      <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+    <span class="tok-c1">// LEFT JOIN a table function (equivalent to &quot;leftOuterJoin&quot; in Table API)</span>
+    <span class="tok-n">tEnv</span>
+      <span class="tok-o">.</span><span class="tok-n">sqlQuery</span><span class="tok-o">(</span><span class="tok-s">&quot;SELECT s, word, length FROM t LEFT JOIN LATERAL TABLE(split(s)) as T(word, length) ON TRUE&quot;</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">String</span>, <span class="tok-kt">Int</span><span class="tok-o">)]</span>
+      <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">()</span>
+
+  <span class="tok-o">}</span>
+  <span class="tok-k">class</span> <span class="tok-nc">Split</span><span class="tok-o">(</span><span class="tok-n">separator</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">)</span> <span class="tok-k">extends</span> <span class="tok-nc">TableFunction</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">Int</span><span class="tok-o">)]</span> <span class="tok-o">{</span>
+    <span class="tok-k">def</span> <span class="tok-n">eval</span><span class="tok-o">(</span><span class="tok-n">str</span><span class="tok-k">:</span> <span class="tok-kt">String</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-c1">// use collect(...) to emit a row.</span>
+      <span class="tok-n">str</span><span class="tok-o">.</span><span class="tok-n">split</span><span class="tok-o">(</span><span class="tok-n">separator</span><span class="tok-o">).</span><span class="tok-n">foreach</span><span class="tok-o">(</span><span class="tok-n">x</span> <span class="tok-k">=&gt;</span> <span class="tok-n">collect</span><span class="tok-o">((</span><span class="tok-n">x</span><span class="tok-o">,</span> <span class="tok-n">x</span><span class="tok-o">.</span><span class="tok-n">length</span><span class="tok-o">)))</span>
+    <span class="tok-o">}</span>
+  <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_aggregation_functions">11.4.3. Aggregation Functions</h4>
+<div class="paragraph">
+<p>例子</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.course</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.common.typeinfo.TypeInformation</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.java.typeutils.</span><span class="tok-o">{</span><span class="tok-nc">RowTypeInfo</span><span class="tok-o">,</span> <span class="tok-nc">TupleTypeInfo</span><span class="tok-o">}</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.scala.StreamExecutionEnvironment</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.</span><span class="tok-o">{</span><span class="tok-nc">EnvironmentSettings</span><span class="tok-o">,</span> <span class="tok-nc">Tumble</span><span class="tok-o">}</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.functions.AggregateFunction</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.Types</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.types.Row</span>
+
+<span class="tok-k">object</span> <span class="tok-nc">TableUDFExample3</span> <span class="tok-o">{</span>
+  <span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+    <span class="tok-k">val</span> <span class="tok-n">settings</span> <span class="tok-k">=</span> <span class="tok-nc">EnvironmentSettings</span><span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">useBlinkPlanner</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+    <span class="tok-k">val</span> <span class="tok-n">tEnv</span> <span class="tok-k">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">myAggFunc</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-nc">MyMinMax</span>
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">stream</span> <span class="tok-k">=</span> <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">fromElements</span><span class="tok-o">(</span>
+      <span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-o">-</span><span class="tok-mi">1</span><span class="tok-o">),</span>
+      <span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-mi">2</span><span class="tok-o">)</span>
+    <span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">table</span> <span class="tok-k">=</span> <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">stream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;key</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;a</span><span class="tok-o">)</span>
+    <span class="tok-n">table</span>
+      <span class="tok-o">.</span><span class="tok-n">groupBy</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;key</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">aggregate</span><span class="tok-o">(</span><span class="tok-n">myAggFunc</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;a</span><span class="tok-o">)</span> <span class="tok-n">as</span> <span class="tok-o">(</span><span class=" tok--Symbol">&#39;x</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;y</span><span class="tok-o">))</span>
+      <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;key</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;x</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;y</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">toRetractStream</span><span class="tok-o">[(</span><span class="tok-kt">Long</span>, <span class="tok-kt">Long</span>, <span class="tok-kt">Long</span><span class="tok-o">)]</span>
+      <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">()</span>
+  <span class="tok-o">}</span>
+
+  <span class="tok-k">case</span> <span class="tok-k">class</span> <span class="tok-nc">MyMinMaxAcc</span><span class="tok-o">(</span><span class="tok-k">var</span> <span class="tok-n">min</span><span class="tok-k">:</span> <span class="tok-kt">Int</span><span class="tok-o">,</span> <span class="tok-k">var</span> <span class="tok-n">max</span><span class="tok-k">:</span> <span class="tok-kt">Int</span><span class="tok-o">)</span>
+
+  <span class="tok-k">class</span> <span class="tok-nc">MyMinMax</span> <span class="tok-k">extends</span> <span class="tok-nc">AggregateFunction</span><span class="tok-o">[</span><span class="tok-kt">Row</span>, <span class="tok-kt">MyMinMaxAcc</span><span class="tok-o">]</span> <span class="tok-o">{</span>
+
+    <span class="tok-k">def</span> <span class="tok-n">accumulate</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-k">:</span> <span class="tok-kt">MyMinMaxAcc</span><span class="tok-o">,</span> <span class="tok-n">value</span><span class="tok-k">:</span> <span class="tok-kt">Int</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">value</span> <span class="tok-o">&lt;</span> <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">min</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">min</span> <span class="tok-k">=</span> <span class="tok-n">value</span>
+      <span class="tok-o">}</span>
+      <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">value</span> <span class="tok-o">&gt;</span> <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">max</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">max</span> <span class="tok-k">=</span> <span class="tok-n">value</span>
+      <span class="tok-o">}</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">createAccumulator</span><span class="tok-o">()</span><span class="tok-k">:</span> <span class="tok-kt">MyMinMaxAcc</span> <span class="tok-o">=</span> <span class="tok-nc">MyMinMaxAcc</span><span class="tok-o">(</span><span class="tok-mi">0</span><span class="tok-o">,</span> <span class="tok-mi">0</span><span class="tok-o">)</span>
+
+    <span class="tok-k">def</span> <span class="tok-n">resetAccumulator</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-k">:</span> <span class="tok-kt">MyMinMaxAcc</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">min</span> <span class="tok-k">=</span> <span class="tok-mi">0</span>
+      <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">max</span> <span class="tok-k">=</span> <span class="tok-mi">0</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">getValue</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-k">:</span> <span class="tok-kt">MyMinMaxAcc</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Row</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-nc">Row</span><span class="tok-o">.</span><span class="tok-n">of</span><span class="tok-o">(</span><span class="tok-nc">Integer</span><span class="tok-o">.</span><span class="tok-n">valueOf</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">min</span><span class="tok-o">),</span> <span class="tok-nc">Integer</span><span class="tok-o">.</span><span class="tok-n">valueOf</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">max</span><span class="tok-o">))</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">getResultType</span><span class="tok-k">:</span> <span class="tok-kt">TypeInformation</span><span class="tok-o">[</span><span class="tok-kt">Row</span><span class="tok-o">]</span> <span class="tok-k">=</span> <span class="tok-o">{</span>
+      <span class="tok-k">new</span> <span class="tok-nc">RowTypeInfo</span><span class="tok-o">(</span><span class="tok-nc">Types</span><span class="tok-o">.</span><span class="tok-nc">INT</span><span class="tok-o">,</span> <span class="tok-nc">Types</span><span class="tok-o">.</span><span class="tok-nc">INT</span><span class="tok-o">)</span>
+    <span class="tok-o">}</span>
+  <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_table_aggregation_functions">11.4.4. Table Aggregation Functions</h4>
+<div class="paragraph">
+<p>例子</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.course</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">java.lang.</span><span class="tok-o">{</span><span class="tok-nc">Integer</span> <span class="tok-k">=&gt;</span> <span class="tok-nc">JInteger</span><span class="tok-o">}</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.functions.TableAggregateFunction</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.streaming.api.scala.StreamExecutionEnvironment</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.EnvironmentSettings</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.table.api.scala._</span>
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.api.java.tuple.</span><span class="tok-o">{</span><span class="tok-nc">Tuple2</span> <span class="tok-k">=&gt;</span> <span class="tok-nc">JTuple2</span><span class="tok-o">}</span>
+<span class="tok-k">import</span> <span class="tok-nn">java.lang.</span><span class="tok-o">{</span><span class="tok-nc">Iterable</span> <span class="tok-k">=&gt;</span> <span class="tok-nc">JIterable</span><span class="tok-o">}</span>
+
+<span class="tok-k">import</span> <span class="tok-nn">org.apache.flink.util.Collector</span>
+
+<span class="tok-k">object</span> <span class="tok-nc">TableUDFExample4</span> <span class="tok-o">{</span>
+  <span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+    <span class="tok-k">val</span> <span class="tok-n">settings</span> <span class="tok-k">=</span> <span class="tok-nc">EnvironmentSettings</span><span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">useBlinkPlanner</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+      <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+    <span class="tok-k">val</span> <span class="tok-n">tEnv</span> <span class="tok-k">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">stream</span> <span class="tok-k">=</span> <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">fromElements</span><span class="tok-o">(</span>
+      <span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-o">-</span><span class="tok-mi">1</span><span class="tok-o">),</span>
+      <span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-mi">2</span><span class="tok-o">),</span>
+      <span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-mi">0</span><span class="tok-o">),</span>
+      <span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-mi">5</span><span class="tok-o">),</span>
+      <span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-mi">4</span><span class="tok-o">)</span>
+    <span class="tok-o">)</span>
+    <span class="tok-k">val</span> <span class="tok-n">top2</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-nc">Top2</span>
+    <span class="tok-k">val</span> <span class="tok-n">table</span> <span class="tok-k">=</span> <span class="tok-n">tEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">stream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;key</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;a</span><span class="tok-o">)</span>
+    <span class="tok-n">table</span>
+      <span class="tok-o">.</span><span class="tok-n">groupBy</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;key</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">flatAggregate</span><span class="tok-o">(</span><span class="tok-n">top2</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;a</span><span class="tok-o">)</span> <span class="tok-n">as</span> <span class="tok-o">(</span><span class=" tok--Symbol">&#39;v</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;rank</span><span class="tok-o">))</span>
+      <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;key</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;v</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;rank</span><span class="tok-o">)</span>
+      <span class="tok-o">.</span><span class="tok-n">toRetractStream</span><span class="tok-o">[(</span><span class="tok-kt">Long</span>, <span class="tok-kt">Long</span>, <span class="tok-kt">Long</span><span class="tok-o">)]</span>
+      <span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+
+    <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">()</span>
+  <span class="tok-o">}</span>
+
+  <span class="tok-cm">/**</span>
+<span class="tok-cm">   * Accumulator for top2.</span>
+<span class="tok-cm">   */</span>
+  <span class="tok-k">class</span> <span class="tok-nc">Top2Accum</span> <span class="tok-o">{</span>
+    <span class="tok-k">var</span> <span class="tok-n">first</span><span class="tok-k">:</span> <span class="tok-kt">JInteger</span> <span class="tok-o">=</span> <span class="tok-k">_</span>
+    <span class="tok-k">var</span> <span class="tok-n">second</span><span class="tok-k">:</span> <span class="tok-kt">JInteger</span> <span class="tok-o">=</span> <span class="tok-k">_</span>
+  <span class="tok-o">}</span>
+
+  <span class="tok-cm">/**</span>
+<span class="tok-cm">   * The top2 user-defined table aggregate function.</span>
+<span class="tok-cm">   */</span>
+  <span class="tok-k">class</span> <span class="tok-nc">Top2</span> <span class="tok-k">extends</span> <span class="tok-nc">TableAggregateFunction</span><span class="tok-o">[</span><span class="tok-kt">JTuple2</span><span class="tok-o">[</span><span class="tok-kt">JInteger</span>, <span class="tok-kt">JInteger</span><span class="tok-o">]</span>, <span class="tok-kt">Top2Accum</span><span class="tok-o">]</span> <span class="tok-o">{</span>
+
+    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">createAccumulator</span><span class="tok-o">()</span><span class="tok-k">:</span> <span class="tok-kt">Top2Accum</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-k">val</span> <span class="tok-n">acc</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-nc">Top2Accum</span>
+      <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">first</span> <span class="tok-k">=</span> <span class="tok-nc">Int</span><span class="tok-o">.</span><span class="tok-nc">MinValue</span>
+      <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">second</span> <span class="tok-k">=</span> <span class="tok-nc">Int</span><span class="tok-o">.</span><span class="tok-nc">MinValue</span>
+      <span class="tok-n">acc</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-k">def</span> <span class="tok-n">accumulate</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-k">:</span> <span class="tok-kt">Top2Accum</span><span class="tok-o">,</span> <span class="tok-n">v</span><span class="tok-k">:</span> <span class="tok-kt">Int</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+      <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">v</span> <span class="tok-o">&gt;</span> <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">first</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">second</span> <span class="tok-k">=</span> <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">first</span>
+        <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">first</span> <span class="tok-k">=</span> <span class="tok-n">v</span>
+      <span class="tok-o">}</span> <span class="tok-k">else</span> <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">v</span> <span class="tok-o">&gt;</span> <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">second</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">second</span> <span class="tok-k">=</span> <span class="tok-n">v</span>
+      <span class="tok-o">}</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-k">def</span> <span class="tok-n">merge</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-k">:</span> <span class="tok-kt">Top2Accum</span><span class="tok-o">,</span> <span class="tok-n">its</span><span class="tok-k">:</span> <span class="tok-kt">JIterable</span><span class="tok-o">[</span><span class="tok-kt">Top2Accum</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-k">val</span> <span class="tok-n">iter</span> <span class="tok-k">=</span> <span class="tok-n">its</span><span class="tok-o">.</span><span class="tok-n">iterator</span><span class="tok-o">()</span>
+      <span class="tok-k">while</span> <span class="tok-o">(</span><span class="tok-n">iter</span><span class="tok-o">.</span><span class="tok-n">hasNext</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-k">val</span> <span class="tok-n">top2</span> <span class="tok-k">=</span> <span class="tok-n">iter</span><span class="tok-o">.</span><span class="tok-n">next</span><span class="tok-o">()</span>
+        <span class="tok-n">accumulate</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-o">,</span> <span class="tok-n">top2</span><span class="tok-o">.</span><span class="tok-n">first</span><span class="tok-o">)</span>
+        <span class="tok-n">accumulate</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-o">,</span> <span class="tok-n">top2</span><span class="tok-o">.</span><span class="tok-n">second</span><span class="tok-o">)</span>
+      <span class="tok-o">}</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-k">def</span> <span class="tok-n">emitValue</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-k">:</span> <span class="tok-kt">Top2Accum</span><span class="tok-o">,</span> <span class="tok-n">out</span><span class="tok-k">:</span> <span class="tok-kt">Collector</span><span class="tok-o">[</span><span class="tok-kt">JTuple2</span><span class="tok-o">[</span><span class="tok-kt">JInteger</span>, <span class="tok-kt">JInteger</span><span class="tok-o">]])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-c1">// emit the value and rank</span>
+      <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">first</span> <span class="tok-o">!=</span> <span class="tok-nc">Int</span><span class="tok-o">.</span><span class="tok-nc">MinValue</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-n">out</span><span class="tok-o">.</span><span class="tok-n">collect</span><span class="tok-o">(</span><span class="tok-nc">JTuple2</span><span class="tok-o">.</span><span class="tok-n">of</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">first</span><span class="tok-o">,</span> <span class="tok-mi">1</span><span class="tok-o">))</span>
+      <span class="tok-o">}</span>
+      <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">second</span> <span class="tok-o">!=</span> <span class="tok-nc">Int</span><span class="tok-o">.</span><span class="tok-nc">MinValue</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+        <span class="tok-n">out</span><span class="tok-o">.</span><span class="tok-n">collect</span><span class="tok-o">(</span><span class="tok-nc">JTuple2</span><span class="tok-o">.</span><span class="tok-n">of</span><span class="tok-o">(</span><span class="tok-n">acc</span><span class="tok-o">.</span><span class="tok-n">second</span><span class="tok-o">,</span> <span class="tok-mi">2</span><span class="tok-o">))</span>
+      <span class="tok-o">}</span>
+    <span class="tok-o">}</span>
+  <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_尚硅谷大数据技术之电商用户行为分析">12. 尚硅谷大数据技术之电商用户行为分析</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_数据集解析">12.1. 数据集解析</h3>
+<div class="sect3">
+<h4 id="_淘宝数据集解析">12.1.1. 淘宝数据集解析</h4>
 <div class="paragraph">
 <p>我们准备了一份淘宝用户行为数据集，保存为csv文件。本数据集包含了淘宝上某一天随机一百万用户的所有行为（包括点击、购买、收藏、喜欢）。数据集的每一行表示一条用户行为，由用户ID、商品ID、商品类目ID、行为类型和时间戳组成，并以逗号分隔。关于数据集中每一列的详细描述如下：</p>
 </div>
@@ -7435,7 +7947,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </table>
 </div>
 <div class="sect3">
-<h4 id="_apache服务器日志数据集解析">11.1.2. Apache服务器日志数据集解析</h4>
+<h4 id="_apache服务器日志数据集解析">12.1.2. Apache服务器日志数据集解析</h4>
 <div class="paragraph">
 <p>这里以apache服务器的一份log为例，每一行日志记录了访问者的IP、userId、访问时间、访问方法以及访问的url，具体描述如下：</p>
 </div>
@@ -7483,7 +7995,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_实时热门商品统计">11.2. 实时热门商品统计</h3>
+<h3 id="_实时热门商品统计">12.2. 实时热门商品统计</h3>
 <div class="paragraph">
 <p>首先要实现的是实时热门商品统计，我们将会基于UserBehavior数据集来进行分析。</p>
 </div>
@@ -7787,7 +8299,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_实时流量统计">11.3. 实时流量统计</h3>
+<h3 id="_实时流量统计">12.3. 实时流量统计</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -7964,7 +8476,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_uv统计的布隆过滤器实现">11.4. Uv统计的布隆过滤器实现</h3>
+<h3 id="_uv统计的布隆过滤器实现">12.4. Uv统计的布隆过滤器实现</h3>
 <div class="paragraph">
 <p>完整代码如下：</p>
 </div>
@@ -8079,7 +8591,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_app分渠道数据统计">11.5. APP分渠道数据统计</h3>
+<h3 id="_app分渠道数据统计">12.5. APP分渠道数据统计</h3>
 <div class="paragraph">
 <p>完整代码如下：</p>
 </div>
@@ -8163,7 +8675,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_app不分渠道数据统计">11.6. APP不分渠道数据统计</h3>
+<h3 id="_app不分渠道数据统计">12.6. APP不分渠道数据统计</h3>
 <div class="paragraph">
 <p>完整代码如下：</p>
 </div>
@@ -8212,7 +8724,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_恶意登陆实现">11.7. 恶意登陆实现</h3>
+<h3 id="_恶意登陆实现">12.7. 恶意登陆实现</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu</span>
@@ -8296,7 +8808,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_订单支付实时监控">11.8. 订单支付实时监控</h3>
+<h3 id="_订单支付实时监控">12.8. 订单支付实时监控</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -8325,7 +8837,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </ul>
 </div>
 <div class="sect3">
-<h4 id="_使用flink_cep来实现">11.8.1. 使用Flink CEP来实现</h4>
+<h4 id="_使用flink_cep来实现">12.8.1. 使用Flink CEP来实现</h4>
 <div class="paragraph">
 <p>在电商平台中，最终创造收入和利润的是用户下单购买的环节；更具体一点，是用户真正完成支付动作的时候。用户下单的行为可以表明用户对商品的需求，但在现实中，并不是每次下单都会被用户立刻支付。当拖延一段时间后，用户支付的意愿会降低。所以为了让用户更有紧迫感从而提高支付转化率，同时也为了防范订单支付环节的安全风险，电商网站往往会对订单状态进行监控，设置一个失效时间（比如15分钟），如果下单后一段时间仍未支付，订单就会被取消。</p>
 </div>
@@ -8416,7 +8928,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect3">
-<h4 id="_使用process_function实现订单超时需求">11.8.2. 使用Process Function实现订单超时需求</h4>
+<h4 id="_使用process_function实现订单超时需求">12.8.2. 使用Process Function实现订单超时需求</h4>
 <div class="listingblock">
 <div class="title">OrderTimeoutWithoutCep.scala</div>
 <div class="content">
@@ -8498,7 +9010,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_实现两条流的join">11.9. 实现两条流的Join</h3>
+<h3 id="_实现两条流的join">12.9. 实现两条流的Join</h3>
 <div class="paragraph">
 <p>完整代码如下：</p>
 </div>
@@ -8625,10 +9137,10 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect1">
-<h2 id="_常见面试题解答">12. 常见面试题解答</h2>
+<h2 id="_常见面试题解答">13. 常见面试题解答</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_面试题一">12.1. 面试题一</h3>
+<h3 id="_面试题一">13.1. 面试题一</h3>
 <div class="paragraph">
 <p>问题：公司怎么提交的实时任务，有多少Job Manager？</p>
 </div>
@@ -8662,7 +9174,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题二">12.2. 面试题二</h3>
+<h3 id="_面试题二">13.2. 面试题二</h3>
 <div class="paragraph">
 <p>问题：怎么做压力测试和监控？</p>
 </div>
@@ -8688,7 +9200,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题三">12.3. 面试题三</h3>
+<h3 id="_面试题三">13.3. 面试题三</h3>
 <div class="paragraph">
 <p>问题：问什么使用Flink替代Spark？</p>
 </div>
@@ -8697,7 +9209,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题四">12.4. 面试题四</h3>
+<h3 id="_面试题四">13.4. 面试题四</h3>
 <div class="paragraph">
 <p>问题：Flink的CheckPoint存在哪里？</p>
 </div>
@@ -8706,7 +9218,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题五">12.5. 面试题五</h3>
+<h3 id="_面试题五">13.5. 面试题五</h3>
 <div class="paragraph">
 <p>问题：如果下级存储不支持事务，Flink怎么保证exactly-once？</p>
 </div>
@@ -8715,7 +9227,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题六">12.6. 面试题六</h3>
+<h3 id="_面试题六">13.6. 面试题六</h3>
 <div class="paragraph">
 <p>问题：说一下Flink状态机制？</p>
 </div>
@@ -8724,7 +9236,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题七">12.7. 面试题七</h3>
+<h3 id="_面试题七">13.7. 面试题七</h3>
 <div class="paragraph">
 <p>问题：怎么去重？考虑一个实时场景：双十一场景，滑动窗口长度为1小时，滑动距离为10秒钟，亿级用户，计算UV？</p>
 </div>
@@ -8733,7 +9245,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题八">12.8. 面试题八</h3>
+<h3 id="_面试题八">13.8. 面试题八</h3>
 <div class="paragraph">
 <p>问题：Flink的checkpoint机制对比spark有什么不同和优势？</p>
 </div>
@@ -8747,7 +9259,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题九">12.9. 面试题九</h3>
+<h3 id="_面试题九">13.9. 面试题九</h3>
 <div class="paragraph">
 <p>问题：Flink的Watermark详细说明？</p>
 </div>
@@ -8756,7 +9268,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题十">12.10. 面试题十</h3>
+<h3 id="_面试题十">13.10. 面试题十</h3>
 <div class="paragraph">
 <p>问题：Flink ExactlyOnce语义是如何实现的，状态是如何存储的？</p>
 </div>
@@ -8765,7 +9277,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题十一">12.11. 面试题十一</h3>
+<h3 id="_面试题十一">13.11. 面试题十一</h3>
 <div class="paragraph">
 <p>问题：Flink CEP编程中当状态没有到达的时候会将数据保存在哪里？</p>
 </div>
@@ -8774,7 +9286,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题十二">12.12. 面试题十二</h3>
+<h3 id="_面试题十二">13.12. 面试题十二</h3>
 <div class="paragraph">
 <p>问题：Flink三种时间概念分别说出应用场景？</p>
 </div>
@@ -8796,7 +9308,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题十三">12.13. 面试题十三</h3>
+<h3 id="_面试题十三">13.13. 面试题十三</h3>
 <div class="paragraph">
 <p>问题：Flink程序在面对数据高峰期时如何处理？</p>
 </div>
@@ -8805,7 +9317,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题十四">12.14. 面试题十四</h3>
+<h3 id="_面试题十四">13.14. 面试题十四</h3>
 <div class="paragraph">
 <p>问题：flink消费kakfa保证数据不丢失（flink消费kafka数据不丢不重，flink消费kafka的时候挂了怎么恢复数据）</p>
 </div>
@@ -8814,7 +9326,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题十五">12.15. 面试题十五</h3>
+<h3 id="_面试题十五">13.15. 面试题十五</h3>
 <div class="paragraph">
 <p>问题：Flink过来的数据量太大怎么处理？</p>
 </div>
@@ -8823,7 +9335,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题十六">12.16. 面试题十六</h3>
+<h3 id="_面试题十六">13.16. 面试题十六</h3>
 <div class="paragraph">
 <p>问题：Kafka每5分钟过来的数据量是多少，flink跑的实时频率，flink topN 跑的频率？</p>
 </div>
@@ -8832,7 +9344,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_面试题十七">12.17. 面试题十七</h3>
+<h3 id="_面试题十七">13.17. 面试题十七</h3>
 <div class="paragraph">
 <p>问题：Flink的资源是如何设置的，设置资源的时候依据是什么？</p>
 </div>
@@ -8885,7 +9397,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br>
-Last updated 2020-02-20 20:30:49 +0800
+Last updated 2020-03-24 10:55:26 +0800
 </div>
 </div>
 <style>

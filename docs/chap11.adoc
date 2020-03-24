@@ -1,1076 +1,476 @@
-== 尚硅谷大数据技术之电商用户行为分析
+== Flink Table API & SQL
 
-=== 数据集解析
+=== 导入依赖
 
-==== 淘宝数据集解析
+根据使用的语言不同（Java，Scala），以下依赖选择一个使用。
 
-我们准备了一份淘宝用户行为数据集，保存为csv文件。本数据集包含了淘宝上某一天随机一百万用户的所有行为（包括点击、购买、收藏、喜欢）。数据集的每一行表示一条用户行为，由用户ID、商品ID、商品类目ID、行为类型和时间戳组成，并以逗号分隔。关于数据集中每一列的详细描述如下：
-
-[cols=3*,options="header"]
-|===
-|字段名
-|数据类型
-|说明
-
-|userId
-|Long
-|加密后的用户ID
-
-|itemId
-|Long
-|加密后的商品ID
-
-|categoryId
-|Int
-|加密后的商品所属类别ID
-
-|behavior
-|String
-|用户行为类型，包括('pv', 'buy', 'cart', 'fav')
-
-|timestamp
-|Long
-|行为发生的时间戳，单位秒
-|===
-
-==== Apache服务器日志数据集解析
-
-这里以apache服务器的一份log为例，每一行日志记录了访问者的IP、userId、访问时间、访问方法以及访问的url，具体描述如下：
-
-[cols=3*,options="header"]
-|===
-|字段名
-|数据类型
-|说明
-
-|ip
-|String
-|访问的IP
-
-|userId
-|Long
-|访问的user ID
-
-|eventTime
-|Long
-|访问时间
-
-|method
-|String
-|访问方法 GET/POST/PUT/DELETE
-
-|url
-|String
-|访问的url
-|===
-
-=== 实时热门商品统计
-
-首先要实现的是实时热门商品统计，我们将会基于UserBehavior数据集来进行分析。
-
-*基本需求*
-
-* 每隔5分钟输出最近一小时内点击量最多的前N个商品
-* 点击量用浏览次数("pv")来衡量
-
-*解决思路*
-
-. 在所有用户行为数据中，过滤出浏览("pv")行为进行统计
-. 构建滑动窗口，窗口长度为1小时，滑动距离为5分钟
-. 窗口计算使用增量聚合函数和全窗口聚合函数相结合的方法
-. 使用窗口结束时间作为key，对DataStream进行keyBy()操作
-. 将KeyedStream中的元素存储到ListState中，当水位线超过窗口结束时间时，排序输出
-
-*数据准备*
-
-将数据文件UserBehavior.csv复制到资源文件目录src/main/resources下。
-
-*程序主体*
-
-[source,scala]
-.HotItems.scala
+[source,xml]
 ----
-// 把数据需要ETL成UserBehavior类型
-case class UserBehavior(userId: Long, itemId: Long, categoryId: Int, behavior: String, timestamp: Long)
-
-// 全窗口聚合函数输出的数据类型
-case class ItemViewCount(itemId: Long, windowEnd: Long, count: Long)
- 
-object HotItems {
-  def main(args: Array[String]): Unit = {
-    // 创建一个 StreamExecutionEnvironment
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-    // 设定Time类型为EventTime
-    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-    // 为了打印到控制台的结果不乱序，我们配置全局的并发为1，这里改变并发对结果正确性没有影响
-    env.setParallelism(1)
-    val stream = env
-      // 以window下为例，需替换成数据集的绝对路径
-      .readTextFile("YOUR_PATH\\resources\\UserBehavior.csv")
-      .map(line => {
-        val linearray = line.split(",")
-        UserBehavior(linearray(0).toLong, linearray(1).toLong, linearray(2).toInt, linearray(3), linearray(4).toLong)
-      })
-      // 过滤出点击事件
-      .filter(_.behavior == "pv")
-      // 指定时间戳和Watermark，这里我们已经知道了数据集的时间戳是单调递增的了。
-      .assignAscendingTimestamps(_.timestamp * 1000)
-      // 根据商品Id分流
-      .keyBy(_.itemId)
-      // 开窗操作
-      .timeWindow(Time.minutes(60), Time.minutes(5))
-      // 窗口计算操作
-      .aggregate(new CountAgg(), new WindowResultFunction())
-      // 根据窗口结束时间分流
-      .keyBy(_.windowEnd)
-      // 求点击量前3名的商品
-      .process(new TopNHotItems(3))
-
-    // 打印结果
-    stream.print()
-
-    // 别忘了执行
-    env.execute("Hot Items Job")
-  }
-}
+<!-- Either... -->
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-table-api-java-bridge_2.11</artifactId>
+  <version>1.10.0</version>
+  <scope>provided</scope>
+</dependency>
+<!-- or... -->
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-table-api-scala-bridge_2.11</artifactId>
+  <version>1.10.0</version>
+  <scope>provided</scope>
+</dependency>
 ----
 
-NOTE: 真实业务场景一般都是乱序的，所以一般不用``assignAscendingTimestamps``，而是使用``BoundedOutOfOrdernessTimestampExtractor``。
+如果想兼容以前写的代码，可以使用下面的第一个依赖；如果想要使用阿里巴巴开发的一些新特性（TopN之类的），可以选择第二个依赖。
 
-*增量聚合函数逻辑编写*
-
-[source,scala]
+[source,xml]
 ----
-// COUNT统计的聚合函数实现，每出现一条记录就加一
-class CountAgg extends AggregateFunction[UserBehavior, Long, Long] {
-  override def createAccumulator(): Long = 0L
-  override def add(userBehavior: UserBehavior, acc: Long): Long = acc + 1
-  override def getResult(acc: Long): Long = acc
-  override def merge(acc1: Long, acc2: Long): Long = acc1 + acc2
-}
-----
-
-*全窗口聚合函数逻辑编写*
-
-其实就是将增量聚合的结果包上一层窗口信息和key的信息。
-
-代码如下：
-
-[source,scala]
-----
-// 用于输出窗口的结果
-class WindowResultFunction extends ProcessWindowFunction[Long, ItemViewCount, String, TimeWindow] {
-  override def process(key: String,
-                        context: Context,
-                        elements: Iterable[Long],
-                        out: Collector[ItemViewCount]): Unit = {
-    out.collect(ItemViewCount(key, context.window.getEnd, elements.iterator.next()))
-  }
-}
+<!-- Either... (for the old planner that was available before Flink 1.9) -->
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-table-planner_2.11</artifactId>
+  <version>1.10.0</version>
+  <scope>provided</scope>
+</dependency>
+<!-- or.. (for the new Blink planner) -->
+<dependency>
+  <groupId>org.apache.flink</groupId>
+  <artifactId>flink-table-planner-blink_2.11</artifactId>
+  <version>1.10.0</version>
+  <scope>provided</scope>
+</dependency>
 ----
 
-现在我们就得到了每个商品在每个窗口的点击量的数据流。
-
-*计算最热门TopN商品*
-
-[source,scala]
-----
-  class TopNHotItems(topSize: Int) extends KeyedProcessFunction[Long, ItemViewCount, String] {
-    // 惰性赋值一个状态变量
-    lazy val itemState = getRuntimeContext.getListState(
-      new ListStateDescriptor[ItemViewCount]("items", Types.of[ItemViewCount])
-    )
-
-    // 来一条数据都会调用一次
-    override def processElement(value: ItemViewCount,
-                                ctx: KeyedProcessFunction[Long, ItemViewCount, String]#Context,
-                                out: Collector[String]): Unit = {
-      itemState.add(value)
-      ctx.timerService().registerEventTimeTimer(value.windowEnd + 1)
-    }
-
-    // 定时器事件
-    override def onTimer(ts: Long,
-                         ctx: KeyedProcessFunction[Long, ItemViewCount, String]#OnTimerContext,
-                         out: Collector[String]): Unit = {
-      val allItems: ListBuffer[ItemViewCount] = ListBuffer()
-      // 导入一些隐式类型转换
-      import scala.collection.JavaConversions._
-      for (item <- itemState.get) {
-        allItems += item
-      }
-
-      // 清空状态变量，释放空间
-      itemState.clear()
-
-      // 降序排列
-      val sortedItems = allItems.sortBy(-_.count).take(topSize)
-      val result = new StringBuilder
-      result.append("====================================\n")
-      result.append("时间: ").append(new Timestamp(ts - 1)).append("\n")
-      for (i <- sortedItems.indices) {
-        val currentItem = sortedItems(i)
-        result.append("No")
-          .append(i+1)
-          .append(":")
-          .append("  商品ID=")
-          .append(currentItem.itemId)
-          .append("  浏览量=")
-          .append(currentItem.count)
-          .append("\n")
-      }
-      result.append("====================================\n\n")
-      Thread.sleep(1000)
-      out.collect(result.toString())
-    }
-  }
-----
-
-*更换Kafka作为数据源*
-
-实际生产环境中，我们的数据流往往是从Kafka获取到的。如果要让代码更贴近生产实际，我们只需将source更换为Kafka即可：
-
-NOTE: 注意：这里Kafka的版本要用2.2！
-
-添加依赖：
+如果想要实现一些用户自定义函数（UDF），添加下面的依赖
 
 [source,xml]
 ----
 <dependency>
   <groupId>org.apache.flink</groupId>
-  <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
-  <version>${flink.version}</version>
+  <artifactId>flink-table-common</artifactId>
+  <version>1.10.0</version>
+  <scope>provided</scope>
 </dependency>
 ----
 
-编写代码：
+=== 使用Table API结合SQL实现TopN需求
 
 [source,scala]
 ----
-val properties = new Properties()
-properties.setProperty("bootstrap.servers", "localhost:9092")
-properties.setProperty("group.id", "consumer-group")
-properties.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
-properties.setProperty("value.deserializer",
-"org.apache.kafka.common.serialization.StringDeserializer")
-properties.setProperty("auto.offset.reset", "latest")
-
-val env = StreamExecutionEnvironment.getExecutionEnvironment
-env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-env.setParallelism(1)
-
-val stream = env
-  .addSource(new FlinkKafkaConsumer[String]("hotitems", new SimpleStringSchema(), properties))
-----
-
-当然，根据实际的需要，我们还可以将Sink指定为Kafka、ES、Redis或其它存储，这里就不一一展开实现了。
-
-*kafka生产者程序*
-
-添加依赖
-
-[source,xml]
-----
-<dependency>
-    <groupId>org.apache.kafka</groupId>
-    <artifactId>kafka_2.11</artifactId>
-    <version>2.2.0</version>
-</dependency>
-----
-
-编写代码：
-
-[source,scala]
-----
-import java.util.Properties
-import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
-
-object KafkaProducerUtil {
-
-  def main(args: Array[String]): Unit = {
-    writeToKafka("hotitems")
-  }
-
-  def writeToKafka(topic: String): Unit = {
-    val props = new Properties()
-    props.put("bootstrap.servers", "localhost:9092")
-    props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
-    props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
-    val producer = new KafkaProducer[String, String](props)
-    val bufferedSource = io.Source.fromFile("UserBehavior.csv文件的绝对路径")
-    for (line <- bufferedSource.getLines) {
-      val record = new ProducerRecord[String, String](topic, line)
-      producer.send(record)
-    }
-    producer.close()
-  }
-}
-----
-
-=== 实时流量统计
-
-* 基本需求
-** 从web服务器的日志中，统计实时的访问流量
-** 统计每分钟的ip访问量，取出访问量最大的5个地址，每5秒更新一次
-* 解决思路
-** 将apache服务器日志中的时间，转换为时间戳，作为Event Time
-** 构建滑动窗口，窗口长度为1分钟，滑动距离为5秒
-
-*数据准备*
-
-将apache服务器的日志文件apache.log复制到资源文件目录src/main/resources下，我们将从这里读取数据。
-
-*代码实现*
-
-我们现在要实现的模块是“实时流量统计”。对于一个电商平台而言，用户登录的入口流量、不同页面的访问流量都是值得分析的重要数据，而这些数据，可以简单地从web服务器的日志中提取出来。我们在这里实现最基本的“页面浏览数”的统计，也就是读取服务器日志中的每一行log，统计在一段时间内用户访问url的次数。
-
-具体做法为：每隔5秒，输出最近10分钟内访问量最多的前N个URL。可以看出，这个需求与之前“实时热门商品统计”非常类似，所以我们完全可以借鉴此前的代码。
-
-完整代码如下：
-
-[source,scala]
-----
-package com.atguigu.project
+package com.atguigu.project.topnhotitems
 
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
 
-import org.apache.flink.api.common.functions.AggregateFunction
-import org.apache.flink.api.common.state.ListStateDescriptor
-import org.apache.flink.api.scala.typeutils.Types
+import com.atguigu.project.util.UserBehavior
 import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction
-import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
-import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.api.windowing.windows.TimeWindow
-import org.apache.flink.util.Collector
+import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.api.scala._
+import org.apache.flink.table.api.{EnvironmentSettings, Tumble}
+import org.apache.flink.table.api.scala._
 
-import scala.collection.mutable.ListBuffer
-
-object ApacheLogAnalysis {
-
-  case class ApacheLogEvent(ip: String, userId: String, eventTime: Long, method: String, url: String)
-
-  case class UrlViewCount(url: String, windowEnd: Long, count: Long)
+object HotItemsTable {
 
   def main(args: Array[String]): Unit = {
+
     val env = StreamExecutionEnvironment.getExecutionEnvironment
-    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
+    // 有关Blink的配置，样板代码
+    val settings = EnvironmentSettings.newInstance()
+      .useBlinkPlanner()
+      .inStreamingMode()
+      .build()
+    // 创建流式表的环境
+    val tEnv = StreamTableEnvironment.create(env, settings)
     env.setParallelism(1)
-    val stream = env
-      // 文件的绝对路径
-      .readTextFile("YOUR_PATH\\resources\\apache.log")
-      .map(line => {
-        val linearray = line.split(" ")
-        // 把时间戳ETL成毫秒
-        val simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy:HH:mm:ss")
-        val timestamp = simpleDateFormat.parse(linearray(3)).getTime
-        ApacheLogEvent(linearray(0), linearray(2), timestamp, linearray(5), linearray(6))
-      })
-      .assignTimestampsAndWatermarks(
-        new BoundedOutOfOrdernessTimestampExtractor[ApacheLogEvent](Time.milliseconds(1000)) {
-          override def extractTimestamp(t: ApacheLogEvent): Long = {
-            t.eventTime
-          }
-        }
-      )
-      .keyBy(_.url)
-      .timeWindow(Time.minutes(10), Time.seconds(5))
-      .aggregate(new CountAgg(), new WindowResultFunction())
-      .keyBy(_.windowEnd)
-      .process(new TopNHotUrls(5))
-      .print()
-
-    env.execute("Traffic Analysis Job")
-  }
-
-  class CountAgg extends AggregateFunction[ApacheLogEvent, Long, Long] {
-    override def createAccumulator(): Long = 0L
-    override def add(apacheLogEvent: ApacheLogEvent, acc: Long): Long = acc + 1
-    override def getResult(acc: Long): Long = acc
-    override def merge(acc1: Long, acc2: Long): Long = acc1 + acc2
-  }
-
-  class WindowResultFunction extends ProcessWindowFunction[Long, UrlViewCount, String, TimeWindow] {
-    override def process(key: String, context: Context, elements: Iterable[Long], out: Collector[UrlViewCount]): Unit = {
-      out.collect(UrlViewCount(key, context.window.getEnd, elements.iterator.next()))
-    }
-  }
-
-  class TopNHotUrls(topSize: Int) extends KeyedProcessFunction[Long, UrlViewCount, String] {
-    
-    lazy val urlState = getRuntimeContext.getListState(
-      new ListStateDescriptor[UrlViewCount]("urlState-state", Types.of[UrlViewCount])
-    )
-
-    override def processElement(input: UrlViewCount, context: KeyedProcessFunction[Long, UrlViewCount, String]#Context, collector: Collector[String]): Unit = {
-      // 每条数据都保存到状态中
-      urlState.add(input)
-      context.timerService.registerEventTimeTimer(input.windowEnd + 1)
-    }
-
-    override def onTimer(timestamp: Long, ctx: KeyedProcessFunction[Long, UrlViewCount, String]#OnTimerContext, out: Collector[String]): Unit = {
-      // 获取收到的所有URL访问量
-      val allUrlViews: ListBuffer[UrlViewCount] = ListBuffer()
-      import scala.collection.JavaConversions._
-      for (urlView <- urlState.get) {
-        allUrlViews += urlView
-      }
-      // 提前清除状态中的数据，释放空间
-      urlState.clear()
-      // 按照访问量从大到小排序
-      val sortedUrlViews = allUrlViews.sortBy(_.count)(Ordering.Long.reverse)
-        .take(topSize)
-      // 将排名信息格式化成 String, 便于打印
-      var result: StringBuilder = new StringBuilder
-      result
-        .append("====================================\n")
-        .append("时间: ")
-        .append(new Timestamp(timestamp - 1))
-        .append("\n")
-
-      for (i <- sortedUrlViews.indices) {
-        val currentUrlView: UrlViewCount = sortedUrlViews(i)
-        // e.g.  No1：  URL=/blog/tags/firefox?flav=rss20  流量=55
-        result
-          .append("No")
-          .append(i + 1)
-          .append(": ")
-          .append("  URL=")
-          .append(currentUrlView.url)
-          .append("  流量=")
-          .append(currentUrlView.count)
-          .append("\n")
-      }
-      result
-        .append("====================================\n\n")
-      // 控制输出频率，模拟实时滚动结果
-      Thread.sleep(1000)
-      out.collect(result.toString)
-    }
-  }
-}
-----
-
-=== Uv统计的布隆过滤器实现
-
-完整代码如下：
-
-[source, scala]
-----
-package com.atguigu
-
-import com.atguigu.UserBehavior.UserAction
-import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
-import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.api.windowing.triggers.{Trigger, TriggerResult}
-import org.apache.flink.streaming.api.windowing.triggers.Trigger.TriggerContext
-import org.apache.flink.streaming.api.windowing.windows.TimeWindow
-import org.apache.flink.util.Collector
-import redis.clients.jedis.Jedis
-
-object UvWithBloomFilter {
-  def main(args: Array[String]): Unit = {
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-    env.setParallelism(1)
+    // 使用事件时间
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
+    // 过滤出pv事件，并抽取时间戳
     val stream = env
-      .readTextFile("/Users/yuanzuo/Desktop/Flink0715Tutorial/src/main/resources/UserBehavior.csv")
+      .readTextFile("/home/parallels/flink-tutorial/Flink0830Tutorial/src/main/resources/UserBehavior.csv")
       .map(line => {
         val arr = line.split(",")
-        UserAction(arr(0), arr(1), arr(2), arr(3), arr(4).toLong * 1000)
+        UserBehavior(arr(0).toLong, arr(1).toLong, arr(2).toInt, arr(3), arr(4).toLong * 1000)
       })
-      .assignAscendingTimestamps(_.ts)
       .filter(_.behavior == "pv")
-      .map(r => ("dummyKey", r.userId))
-      .keyBy(_._1)
-      .timeWindow(Time.minutes(60), Time.minutes(5))
-      .trigger(new MyTrigger123)
-      .process(new MyProcess)
+      .assignAscendingTimestamps(_.timestamp)
 
-    stream.print()
-    env.execute()
-  }
+    // 从流中提取两个字段，时间戳；itemId，组成一张表
+    val table = tEnv.fromDataStream(stream, 'timestamp.rowtime, 'itemId)
+    val t = table
+      .window(Tumble over 60.minutes on 'timestamp as 'w) // 一小时滚动窗口
+      .groupBy('itemId, 'w)                               // 根据itemId和窗口进行分组
+      .aggregate('itemId.count as 'icount)                // 对itemId进行计数
+      .select('itemId, 'icount, 'w.end as 'windowEnd)     // 查询三个字段
+      .toAppendStream[(Long, Long, Timestamp)]            // 转换成DataStream
 
-  class MyProcess extends ProcessWindowFunction[(String, String), (Long, Long), String, TimeWindow] {
-    lazy val jedis = new Jedis("localhost", 6379)
-    lazy val bloom = new Bloom(1 << 29)
+    // 创建临时表
+    tEnv.createTemporaryView("topn", t, 'itemId, 'icount, 'windowEnd)
 
-    override def process(key: String,
-                         context: Context,
-                         vals: Iterable[(String, String)],
-                         out: Collector[(Long, Long)]): Unit = {
-      val storeKey = context.window.getEnd.toString
-      var count = 0L
-
-      if (jedis.hget("UvCountHashTable", storeKey) != null) {
-        count = jedis.hget("UvCountHashTable", storeKey).toLong
-      }
-
-      val userId = vals.last._2
-      val offset = bloom.hash(userId, 61)
-
-      val isExist = jedis.getbit(storeKey, offset)
-      if (!isExist) {
-        jedis.setbit(storeKey, offset, true)
-        jedis.hset("UvCountHashTable", storeKey, (count + 1).toString)
-      }
-
-
-
-//      out.collect((count, storeKey.toLong))
-
-    }
-  }
-
-  class MyTrigger123 extends Trigger[(String, String), TimeWindow] {
-    override def onEventTime(time: Long,
-                             window: TimeWindow,
-                             ctx: TriggerContext): TriggerResult = {
-      if (ctx.getCurrentWatermark >= window.getEnd) {
-        val jedis = new Jedis("localhost", 6379)
-        val key = window.getEnd.toString
-        TriggerResult.FIRE_AND_PURGE
-        println(key, jedis.hget("UvCountHashTable", key))
-      }
-      TriggerResult.CONTINUE
-    }
-    override def onProcessingTime(time: Long,
-                                  window: TimeWindow,
-                                  ctx: TriggerContext): TriggerResult = {
-      TriggerResult.CONTINUE
-    }
-    override def clear(window: TimeWindow, ctx: Trigger.TriggerContext): Unit = {}
-    override def onElement(element: (String, String),
-                           timestamp: Long,
-                           window: TimeWindow,
-                           ctx: TriggerContext): TriggerResult = {
-      TriggerResult.FIRE_AND_PURGE
-    }
-  }
-
-  class Bloom(size: Long) extends Serializable {
-    private val cap = size
-
-    def hash(value: String, seed: Int): Long = {
-      var result = 0
-      for (i <- 0 until value.length) {
-        result = result * seed + value.charAt(i)
-      }
-      (cap - 1) & result
-    }
-  }
-}
-----
-
-=== APP分渠道数据统计
-
-完整代码如下：
-
-[source, scala]
-----
-package com.atguigu
-
-import java.util.{Calendar, UUID}
-
-import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction
-import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
-import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.api.windowing.windows.TimeWindow
-import org.apache.flink.util.Collector
-
-import scala.util.Random
-
-object AppMarketingByChannel {
-  case class MarketingUserBehavior(userId: String,
-                                   behavior: String,
-                                   channel: String,
-                                   ts: Long)
-
-  class SimulatedEventSource extends RichParallelSourceFunction[MarketingUserBehavior] {
-    var running = true
-
-    val channelSet = Seq("AppStore", "XiaomiStore")
-    val behaviorTypes = Seq("BROWSE", "CLICK")
-    val rand = new Random
-
-    override def run(ctx: SourceContext[MarketingUserBehavior]): Unit = {
-      while (running) {
-        val userId = UUID.randomUUID().toString
-        val behaviorType = behaviorTypes(rand.nextInt(behaviorTypes.size))
-        val channel = channelSet(rand.nextInt(channelSet.size))
-        val ts = Calendar.getInstance().getTimeInMillis
-
-        ctx.collect(MarketingUserBehavior(userId, behaviorType, channel, ts))
-
-        Thread.sleep(10)
-      }
-    }
-
-    override def cancel(): Unit = running = false
-  }
-
-  def main(args: Array[String]): Unit = {
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-    env.setParallelism(1)
-    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-    val stream = env
-      .addSource(new SimulatedEventSource)
-      .assignAscendingTimestamps(_.ts)
-      .filter(_.behavior != "UNINSTALL")
-      .map(r => {
-        ((r.channel, r.behavior), 1L)
-      })
-      .keyBy(_._1)
-      .timeWindow(Time.seconds(5), Time.seconds(1))
-      .process(new MarketingCountByChannel)
-    stream.print()
-    env.execute()
-  }
-
-  class MarketingCountByChannel extends ProcessWindowFunction[((String, String), Long),(String, Long, Long), (String, String), TimeWindow] {
-    override def process(key:  (String,String),
-                         context: Context,
-                         elements: Iterable[((String, String), Long)],
-                         out: Collector[(String, Long, Long)]): Unit = {
-//      val t = ("a",)
-
-      out.collect((key._1, elements.size, context.window.getEnd))
-
-    }
-  }
-}
-----
-
-=== APP不分渠道数据统计
-
-完整代码如下：
-
-[source, scala]
-----
-package com.atguigu
-
-import com.atguigu.AppMarketingByChannel.SimulatedEventSource
-import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
-import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.api.windowing.windows.TimeWindow
-import org.apache.flink.util.Collector
-
-object AppMarketingStatistics {
-  def main(args: Array[String]): Unit = {
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-    env.setParallelism(1)
-    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-    val stream = env
-      .addSource(new SimulatedEventSource)
-      .assignAscendingTimestamps(_.ts)
-      .filter(_.behavior != "UNINSTALL")
-      .map(r => {
-        ("dummyKey", 1L)
-      })
-      .keyBy(_._1)
-      .timeWindow(Time.seconds(5), Time.seconds(1))
-      .process(new MarketingCountTotal)
-    stream.print()
-    env.execute()
-  }
-
-  class MarketingCountTotal extends ProcessWindowFunction[(String, Long),
-  (String, Long, Long), String, TimeWindow] {
-    override def process(key: String,
-                         context: Context,
-                         elements: Iterable[(String, Long)],
-                         out: Collector[(String, Long, Long)]): Unit = {
-      out.collect((key, elements.size, context.window.getEnd))
-    }
-  }
-}
-----
-
-=== 恶意登陆实现
-
-[source,scala]
-----
-package com.atguigu
-
-import com.atguigu.FlinkCepExample.LoginEvent
-import org.apache.flink.api.common.state.{ListStateDescriptor, ValueStateDescriptor}
-import org.apache.flink.api.scala.typeutils.Types
-import org.apache.flink.cep.scala.pattern.Pattern
-import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.util.Collector
-
-import scala.collection.mutable.ListBuffer
-
-object LoginFailWithoutCEP {
-  def main(args: Array[String]): Unit = {
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-    env.setParallelism(1)
-
-    val stream = env
-      .fromElements(
-        LoginEvent("1", "0.0.0.0", "fail", "1"),
-        LoginEvent("1", "0.0.0.0", "success", "2"),
-        LoginEvent("1", "0.0.0.0", "fail", "3"),
-        LoginEvent("1", "0.0.0.0", "fail", "4")
-      )
-      .assignAscendingTimestamps(_.ts.toLong * 1000)
-      .keyBy(_.userId)
-      .process(new MatchFunction)
-
-    stream.print()
-    env.execute()
-  }
-
-  class MatchFunction extends KeyedProcessFunction[String, LoginEvent, String] {
-
-    lazy val loginState = getRuntimeContext.getListState(
-      new ListStateDescriptor[LoginEvent]("login-fail", Types.of[LoginEvent])
+    // topN查询，Blink支持的特性
+    val result = tEnv.sqlQuery(
+      """
+        |SELECT *
+        |FROM (
+        |    SELECT *,
+        |        ROW_NUMBER() OVER (PARTITION BY windowEnd ORDER BY icount DESC) as row_num
+        |    FROM topn)
+        |WHERE row_num <= 5
+        |""".stripMargin
     )
+    // 使用toRetractStream转换成DataStream，用来实时更新排行榜
+    // true代表insert, false代表delete
+    result.toRetractStream[(Long, Long, Timestamp, Long)].print()
 
-    lazy val timestamp = getRuntimeContext.getState(
-      new ValueStateDescriptor[Long]("ts", Types.of[Long])
-    )
-
-    override def processElement(value: LoginEvent,
-                                ctx: KeyedProcessFunction[String, LoginEvent, String]#Context,
-                                out: Collector[String]): Unit = {
-      if (value.loginStatus == "fail") {
-        loginState.add(value)
-        if (!timestamp.value()) {
-          timestamp.update(value.ts.toLong * 1000 + 5000L)
-          ctx.timerService().registerEventTimeTimer(value.ts.toLong * 1000 + 5000L)
-        }
-      }
-
-      if (value.loginStatus == "success") {
-        loginState.clear()
-        ctx.timerService().deleteEventTimeTimer(timestamp.value())
-      }
-    }
-
-    override def onTimer(ts: Long,
-                         ctx: KeyedProcessFunction[String, LoginEvent, String]#OnTimerContext,
-                         out: Collector[String]): Unit = {
-      val allLogins = ListBuffer[LoginEvent]()
-      import scala.collection.JavaConversions._
-      for (login <- loginState.get) {
-        allLogins += login
-      }
-      loginState.clear()
-
-      if (allLogins.length > 1) {
-        out.collect("5s以内连续两次登陆失败")
-      }
-    }
+    env.execute()
   }
 }
 ----
 
-=== 订单支付实时监控
+=== 只使用Flink SQL实现TopN需求
 
-* 基本需求
-** 用户下单之后，应设置订单失效时间，以提高用户支付的意愿，并降低系统风险
-** 用户下单后15分钟未支付，则输出监控信息
-* 解决思路
-** 利用CEP库进行事件流的模式匹配，并设定匹配的时间间隔
-
-==== 使用Flink CEP来实现
-
-在电商平台中，最终创造收入和利润的是用户下单购买的环节；更具体一点，是用户真正完成支付动作的时候。用户下单的行为可以表明用户对商品的需求，但在现实中，并不是每次下单都会被用户立刻支付。当拖延一段时间后，用户支付的意愿会降低。所以为了让用户更有紧迫感从而提高支付转化率，同时也为了防范订单支付环节的安全风险，电商网站往往会对订单状态进行监控，设置一个失效时间（比如15分钟），如果下单后一段时间仍未支付，订单就会被取消。
-
-我们将会利用CEP库来实现这个功能。我们先将事件流按照订单号orderId分流，然后定义这样的一个事件模式：在15分钟内，事件“create”与“pay”严格紧邻：
+代码
 
 [source,scala]
 ----
-val orderPayPattern = Pattern.begin[OrderEvent]("begin")
-  .where(_.eventType == "create")
-  .next("next")
-  .where(_.eventType == "pay")
-  .within(Time.seconds(5))
-----
+package com.atguigu.project.topnhotitems
 
-这样调用.select方法时，就可以同时获取到匹配出的事件和超时未匹配的事件了。
-在src/main/scala下继续创建OrderTimeout.scala文件，新建一个单例对象。定义样例类OrderEvent，这是输入的订单事件流；另外还有OrderResult，这是输出显示的订单状态结果。由于没有现成的数据，我们还是用几条自定义的示例数据来做演示。
-完整代码如下：
+import java.sql.Timestamp
 
-[source,scala]
-----
-import org.apache.flink.cep.scala.CEP
-import org.apache.flink.cep.scala.pattern.Pattern
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.windowing.time.Time
+import com.atguigu.project.util.UserBehavior
 import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.util.Collector
-import scala.collection.Map
-
-case class OrderEvent(orderId: String, eventType: String, eventTime: String)
-
-object OrderTimeout {
-
-  def main(args: Array[String]): Unit = {
-
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-    env.setParallelism(1)
-    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-
-    val orderEventStream = env.fromCollection(List(
-      OrderEvent("1", "create", "1558430842"),
-      OrderEvent("2", "create", "1558430843"),
-      OrderEvent("2", "pay", "1558430844"),
-      OrderEvent("3", "pay", "1558430942"),
-      OrderEvent("4", "pay", "1558430943")
-    )).assignAscendingTimestamps(_.eventTime.toLong * 1000)
-
-//    val orders: DataStream[String] = env.socketTextStream("localhost", 9999)
-//
-//    val orderEventStream = orders
-//      .map(s => {
-//        println(s)
-//        val slist = s.split("\\|")
-//        println(slist)
-//        OrderEvent(slist(0), slist(1), slist(2))
-//      })
-//      .assignAscendingTimestamps(_.eventTime.toLong * 1000)
-
-    val orderPayPattern = Pattern.begin[OrderEvent]("begin")
-      .where(_.eventType.equals("create"))
-      .next("next")
-      .where(_.eventType.equals("pay"))
-      .within(Time.seconds(5))
-
-    val orderTimeoutOutput = OutputTag[OrderEvent]("orderTimeout")
-
-    val patternStream = CEP.pattern(orderEventStream.keyBy("orderId"), orderPayPattern)
-
-    val timeoutFunction = (map: Map[String, Iterable[OrderEvent]], timestamp: Long, out: Collector[OrderEvent]) => {
-      print(timestamp)
-      val orderStart = map.get("begin").get.head
-      out.collect(orderStart)
-    }
-
-    val selectFunction = (map: Map[String, Iterable[OrderEvent]], out: Collector[OrderEvent]) => {
-    }
-
-    val timeoutOrder = patternStream.flatSelect(orderTimeoutOutput)(timeoutFunction)(selectFunction)
-
-    timeoutOrder.getSideOutput(orderTimeoutOutput).print()
-
-    env.execute
-
-  }
-}
-----
-
-==== 使用Process Function实现订单超时需求
-
-.OrderTimeoutWithoutCep.scala
-[source,scala]
-----
-import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
-import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.util.Collector
+import org.apache.flink.api.scala._
+import org.apache.flink.table.api.{EnvironmentSettings, Tumble}
+import org.apache.flink.table.api.scala._
 
-case class OrderEvent1(orderId: String,
-                      eventType: String,
-                      eventTime: String)
+object HotItemsSQL {
 
-object OrderTimeoutWithoutCep {
   def main(args: Array[String]): Unit = {
+
     val env = StreamExecutionEnvironment.getExecutionEnvironment
+    val settings = EnvironmentSettings.newInstance()
+      .useBlinkPlanner()
+      .inStreamingMode()
+      .build()
+    val tEnv = StreamTableEnvironment.create(env, settings)
     env.setParallelism(1)
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
+    val stream = env
+      .readTextFile("/home/parallels/flink-tutorial/Flink0830Tutorial/src/main/resources/UserBehavior.csv")
+      .map(line => {
+        val arr = line.split(",")
+        UserBehavior(arr(0).toLong, arr(1).toLong, arr(2).toInt, arr(3), arr(4).toLong * 1000)
+      })
+      .filter(_.behavior == "pv")
+      .assignAscendingTimestamps(_.timestamp)
 
-    val orderEventsStream = env.fromCollection(List(
-      OrderEvent1("1", "create", "1558430842"),
-      OrderEvent1("2", "create", "1558430843"),
-      OrderEvent1("2", "pay", "1558430844"),
-      OrderEvent1("3", "pay", "1558430942"),
-      OrderEvent1("4", "pay", "1558430943")
-    )).assignAscendingTimestamps(_.eventTime.toLong * 1000)
+    tEnv.createTemporaryView("t", stream, 'itemId, 'timestamp.rowtime as 'ts)
 
-    val orders = orderEventsStream
-      .keyBy(_.orderId)
-      .process(new OrderMatchFunction)
+    val result = tEnv.sqlQuery(
+      """
+        |SELECT *
+        |FROM (
+        |    SELECT *,
+        |        ROW_NUMBER() OVER (PARTITION BY windowEnd ORDER BY icount DESC) as row_num
+        |    FROM (SELECT count(itemId) as icount, TUMBLE_START(ts, INTERVAL '1' HOUR) as windowEnd FROM t GROUP BY TUMBLE(ts, INTERVAL '1' HOUR), itemId) topn)
+        |WHERE row_num <= 5
+        |""".stripMargin
+    )
+    result.toRetractStream[(Long, Timestamp, Long)].print()
+
+    env.execute()
+  }
+}
+----
+
+=== 用户自定义函数
+
+==== Scalar Functions
+
+例子
+
+[source,scala]
+----
+package com.atguigu.course
+
+import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.api.scala._
+import org.apache.flink.table.api.{EnvironmentSettings, Tumble}
+import org.apache.flink.table.api.scala._
+import org.apache.flink.table.functions.ScalarFunction
+
+object TableUDFExample1 {
+  def main(args: Array[String]): Unit = {
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+    val settings = EnvironmentSettings.newInstance()
+      .useBlinkPlanner()
+      .inStreamingMode()
+      .build()
+    val tEnv = StreamTableEnvironment.create(env, settings)
+    env.setParallelism(1)
+    val stream = env.addSource(new SensorSource)
+    val hashCode = new HashCode(10)
+    tEnv.registerFunction("hashCode", new HashCode(10))
+    val table = tEnv.fromDataStream(stream, 'id)
+    // table api 写法
+    table
+      .select('id, hashCode('id))
+      .toAppendStream[(String, Int)]
       .print()
 
-    env.execute
+    // sql 写法
+    tEnv.createTemporaryView("t", table, 'id)
+    tEnv
+      .sqlQuery("SELECT id, hashCode(id) FROM t")
+      .toAppendStream[(String, Int)]
+      .print()
+
+    env.execute()
   }
 
-  class OrderMatchFunction extends KeyedProcessFunction[String,
-    OrderEvent1, OrderEvent1] {
-    lazy val orderState: ValueState[OrderEvent1] = getRuntimeContext
-      .getState(new ValueStateDescriptor[OrderEvent1]("saved order",
-        classOf[OrderEvent1]))
-
-    override def processElement(order: OrderEvent1,
-                                context: KeyedProcessFunction[
-                                  String, OrderEvent1, OrderEvent1]#Context,
-                                out: Collector[OrderEvent1]): Unit = {
-      val timerService = context.timerService
-
-      if (order.eventType == "create") {
-        if (orderState.value() == null) {
-          orderState.update(order)
-        }
-      } else {
-        orderState.update(order)
-      }
-
-      timerService.registerEventTimeTimer(
-        order.eventTime.toLong * 1000 + 5 * 1000
-      )
+  class HashCode(factor: Int) extends ScalarFunction {
+    def eval(s: String): Int = {
+      s.hashCode() * factor
     }
+  }
+  
+}
+----
 
-    override def onTimer(timestamp: Long,
-                         ctx: KeyedProcessFunction[
-                           String, OrderEvent1, OrderEvent1]#OnTimerContext,
-                         out: Collector[OrderEvent1]): Unit = {
-      val savedOrder = orderState.value()
+==== Table Functions
 
-      if (savedOrder != null &&
-        (savedOrder.eventType == "create")) {
-        out.collect(savedOrder)
-      }
+[source,scala]
+----
+package com.atguigu.course
 
-      orderState.clear()
+import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.api.scala._
+import org.apache.flink.table.api.{EnvironmentSettings, Tumble}
+import org.apache.flink.table.api.scala._
+import org.apache.flink.table.functions.TableFunction
+
+object TableUDFExample2 {
+  def main(args: Array[String]): Unit = {
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+    val settings = EnvironmentSettings.newInstance()
+      .useBlinkPlanner()
+      .inStreamingMode()
+      .build()
+    val tEnv = StreamTableEnvironment.create(env, settings)
+    val split = new Split("#")
+    env.setParallelism(1)
+    val stream = env.fromElements(
+      "hello#world"
+    )
+    val table = tEnv.fromDataStream(stream, 's)
+    // table api 写法
+    table
+      .joinLateral(split('s) as ('word, 'length))
+      .select('s, 'word, 'length)
+      .toAppendStream[(String, String, Long)]
+      .print()
+    table
+      .leftOuterJoinLateral(split('s) as ('word, 'length))
+      .select('s, 'word, 'length)
+      .toAppendStream[(String, String, Long)]
+      .print()
+
+    // sql 写法
+    tEnv.registerFunction("split", new Split("#"))
+
+    tEnv.createTemporaryView("t", table, 's)
+
+    // Use the table function in SQL with LATERAL and TABLE keywords.
+    // CROSS JOIN a table function (equivalent to "join" in Table API)
+    tEnv
+      .sqlQuery("SELECT s, word, length FROM t, LATERAL TABLE(split(s)) as T(word, length)")
+      .toAppendStream[(String, String, Int)]
+      .print()
+    // LEFT JOIN a table function (equivalent to "leftOuterJoin" in Table API)
+    tEnv
+      .sqlQuery("SELECT s, word, length FROM t LEFT JOIN LATERAL TABLE(split(s)) as T(word, length) ON TRUE")
+      .toAppendStream[(String, String, Int)]
+      .print()
+
+    env.execute()
+
+  }
+  class Split(separator: String) extends TableFunction[(String, Int)] {
+    def eval(str: String): Unit = {
+      // use collect(...) to emit a row.
+      str.split(separator).foreach(x => collect((x, x.length)))
     }
   }
 }
 ----
 
-=== 实现两条流的Join
+==== Aggregation Functions
 
-完整代码如下：
+例子
 
 [source,scala]
 ----
-import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
-import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.functions.co.CoProcessFunction
-import org.apache.flink.streaming.api.scala.OutputTag
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.util.Collector
+package com.atguigu.course
 
-case class OrderEvent(orderId: String,
-                      eventType: String,
-                      eventTime: String)
+import org.apache.flink.api.common.typeinfo.TypeInformation
+import org.apache.flink.api.java.typeutils.{RowTypeInfo, TupleTypeInfo}
+import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.api.scala._
+import org.apache.flink.table.api.{EnvironmentSettings, Tumble}
+import org.apache.flink.table.api.scala._
+import org.apache.flink.table.functions.AggregateFunction
+import org.apache.flink.table.api.Types
+import org.apache.flink.types.Row
 
-case class PayEvent(orderId: String,
-                    eventType: String,
-                    eventTime: String)
-
-object TwoStreamsJoin {
-  val unmatchedOrders = new OutputTag[OrderEvent]("unmatchedOrders"){}
-  val unmatchedPays = new OutputTag[PayEvent]("unmatchedPays"){}
-
+object TableUDFExample3 {
   def main(args: Array[String]): Unit = {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
-    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
+    val settings = EnvironmentSettings.newInstance()
+      .useBlinkPlanner()
+      .inStreamingMode()
+      .build()
+    val tEnv = StreamTableEnvironment.create(env, settings)
+    val myAggFunc = new MyMinMax
     env.setParallelism(1)
-
-    val orders = env
-      .fromCollection(List(
-      OrderEvent("1", "create", "1558430842"),
-      OrderEvent("2", "create", "1558430843"),
-      OrderEvent("1", "pay", "1558430844"),
-      OrderEvent("2", "pay", "1558430845"),
-      OrderEvent("3", "create", "1558430849"),
-      OrderEvent("3", "pay", "1558430849")
-    )).assignAscendingTimestamps(_.eventTime.toLong * 1000)
-      .keyBy("orderId")
-
-    val pays = env.fromCollection(List(
-      PayEvent("1", "weixin", "1558430847"),
-      PayEvent("2", "zhifubao", "1558430848"),
-      PayEvent("4", "zhifubao", "1558430850")
-    )).assignAscendingTimestamps(_.eventTime.toLong * 1000)
-      .keyBy("orderId")
-
-    val processed = orders
-      .connect(pays)
-      .process(new EnrichmentFunction)
-
-    processed.getSideOutput[PayEvent](unmatchedPays).print()
-    processed.getSideOutput[OrderEvent](unmatchedOrders).print()
-
-    env.execute
+    val stream = env.fromElements(
+      (1, -1),
+      (1, 2)
+    )
+    val table = tEnv.fromDataStream(stream, 'key, 'a)
+    table
+      .groupBy('key)
+      .aggregate(myAggFunc('a) as ('x, 'y))
+      .select('key, 'x, 'y)
+      .toRetractStream[(Long, Long, Long)]
+      .print()
+    
+    env.execute()
   }
 
-  class EnrichmentFunction extends CoProcessFunction[
-    OrderEvent, PayEvent, (OrderEvent, PayEvent)] {
-    lazy val orderState: ValueState[OrderEvent] = getRuntimeContext
-      .getState(new ValueStateDescriptor[OrderEvent]("saved order",
-        classOf[OrderEvent]))
+  case class MyMinMaxAcc(var min: Int, var max: Int)
 
-    lazy val payState: ValueState[PayEvent] = getRuntimeContext
-      .getState(new ValueStateDescriptor[PayEvent]("saved pay",
-        classOf[PayEvent]))
+  class MyMinMax extends AggregateFunction[Row, MyMinMaxAcc] {
 
-    override def processElement1(order: OrderEvent,
-                                 context: CoProcessFunction[
-                                   OrderEvent,
-                                   PayEvent,
-                                   (OrderEvent, PayEvent)]#Context,
-                                 out: Collector[(OrderEvent, PayEvent)]): Unit = {
-      val pay = payState.value()
-
-      if (pay != null) {
-        payState.clear()
-        out.collect((order, pay))
-      } else {
-        orderState.update(order)
-        // as soon as the watermark arrives,
-        // we can stop waiting for the corresponding pay
-        context.timerService
-          .registerEventTimeTimer(order.eventTime.toLong * 1000)
+    def accumulate(acc: MyMinMaxAcc, value: Int): Unit = {
+      if (value < acc.min) {
+        acc.min = value
+      }
+      if (value > acc.max) {
+        acc.max = value
       }
     }
 
-    override def processElement2(pay: PayEvent,
-                                 context: CoProcessFunction[
-                                   OrderEvent,
-                                   PayEvent,
-                                   (OrderEvent, PayEvent)]#Context,
-                                 out: Collector[(OrderEvent, PayEvent)]): Unit = {
-      val order = orderState.value()
+    override def createAccumulator(): MyMinMaxAcc = MyMinMaxAcc(0, 0)
 
-      if (order != null) {
-        orderState.clear()
-        out.collect((order, pay))
-      } else {
-        payState.update(pay)
-        context.timerService.registerEventTimeTimer(pay.eventTime.toLong * 1000)
+    def resetAccumulator(acc: MyMinMaxAcc): Unit = {
+      acc.min = 0
+      acc.max = 0
+    }
+
+    override def getValue(acc: MyMinMaxAcc): Row = {
+      Row.of(Integer.valueOf(acc.min), Integer.valueOf(acc.max))
+    }
+
+    override def getResultType: TypeInformation[Row] = {
+      new RowTypeInfo(Types.INT, Types.INT)
+    }
+  }
+}
+----
+
+==== Table Aggregation Functions
+
+例子
+
+[source,scala]
+----
+package com.atguigu.course
+
+import java.lang.{Integer => JInteger}
+
+import org.apache.flink.table.functions.TableAggregateFunction
+import org.apache.flink.api.scala._
+import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.table.api.EnvironmentSettings
+import org.apache.flink.table.api.scala._
+import org.apache.flink.api.java.tuple.{Tuple2 => JTuple2}
+import java.lang.{Iterable => JIterable}
+
+import org.apache.flink.util.Collector
+
+object TableUDFExample4 {
+  def main(args: Array[String]): Unit = {
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+    val settings = EnvironmentSettings.newInstance()
+      .useBlinkPlanner()
+      .inStreamingMode()
+      .build()
+    val tEnv = StreamTableEnvironment.create(env, settings)
+    env.setParallelism(1)
+    val stream = env.fromElements(
+      (1, -1),
+      (1, 2),
+      (1, 0),
+      (1, 5),
+      (1, 4)
+    )
+    val top2 = new Top2
+    val table = tEnv.fromDataStream(stream, 'key, 'a)
+    table
+      .groupBy('key)
+      .flatAggregate(top2('a) as ('v, 'rank))
+      .select('key, 'v, 'rank)
+      .toRetractStream[(Long, Long, Long)]
+      .print()
+
+    env.execute()
+  }
+
+  /**
+   * Accumulator for top2.
+   */
+  class Top2Accum {
+    var first: JInteger = _
+    var second: JInteger = _
+  }
+
+  /**
+   * The top2 user-defined table aggregate function.
+   */
+  class Top2 extends TableAggregateFunction[JTuple2[JInteger, JInteger], Top2Accum] {
+
+    override def createAccumulator(): Top2Accum = {
+      val acc = new Top2Accum
+      acc.first = Int.MinValue
+      acc.second = Int.MinValue
+      acc
+    }
+
+    def accumulate(acc: Top2Accum, v: Int) {
+      if (v > acc.first) {
+        acc.second = acc.first
+        acc.first = v
+      } else if (v > acc.second) {
+        acc.second = v
       }
     }
 
-    override def onTimer(timestamp: Long,
-                         ctx: CoProcessFunction[OrderEvent,
-                           PayEvent, (OrderEvent, PayEvent)]#OnTimerContext,
-                         out: Collector[(OrderEvent, PayEvent)]): Unit = {
-      if (payState.value != null) {
-        ctx.output(unmatchedPays, payState.value)
-        payState.clear()
+    def merge(acc: Top2Accum, its: JIterable[Top2Accum]): Unit = {
+      val iter = its.iterator()
+      while (iter.hasNext) {
+        val top2 = iter.next()
+        accumulate(acc, top2.first)
+        accumulate(acc, top2.second)
       }
+    }
 
-      if (orderState.value != null) {
-        ctx.output(unmatchedOrders, orderState.value)
-        orderState.clear()
+    def emitValue(acc: Top2Accum, out: Collector[JTuple2[JInteger, JInteger]]): Unit = {
+      // emit the value and rank
+      if (acc.first != Int.MinValue) {
+        out.collect(JTuple2.of(acc.first, 1))
+      }
+      if (acc.second != Int.MinValue) {
+        out.collect(JTuple2.of(acc.second, 2))
       }
     }
   }
