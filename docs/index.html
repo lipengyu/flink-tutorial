@@ -630,6 +630,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_富函数rich_functions">5.12.3. 富函数(Rich Functions)</a></li>
 </ul>
 </li>
+<li><a href="#_sink">5.13. Sink</a>
+<ul class="sectlevel3">
+<li><a href="#_kafka">5.13.1. Kafka</a></li>
+<li><a href="#_redis">5.13.2. Redis</a></li>
+<li><a href="#_jdbc自定义sink">5.13.3. JDBC自定义sink</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#_基于时间和窗口的操作符">6. 基于时间和窗口的操作符</a>
@@ -745,14 +752,28 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_flink_table_api_sql">11. Flink Table API &amp; SQL</a>
 <ul class="sectlevel2">
 <li><a href="#_导入依赖">11.1. 导入依赖</a></li>
-<li><a href="#_使用table_api结合sql实现topn需求">11.2. 使用Table API结合SQL实现TopN需求</a></li>
-<li><a href="#_只使用flink_sql实现topn需求">11.3. 只使用Flink SQL实现TopN需求</a></li>
-<li><a href="#_用户自定义函数">11.4. 用户自定义函数</a>
+<li><a href="#_简单了解table_api">11.2. 简单了解Table API</a>
 <ul class="sectlevel3">
-<li><a href="#_scalar_functions">11.4.1. Scalar Functions</a></li>
-<li><a href="#_table_functions">11.4.2. Table Functions</a></li>
-<li><a href="#_aggregation_functions">11.4.3. Aggregation Functions</a></li>
-<li><a href="#_table_aggregation_functions">11.4.4. Table Aggregation Functions</a></li>
+<li><a href="#_动态表">11.2.1. 动态表</a></li>
+<li><a href="#_字段">11.2.2. 字段</a></li>
+</ul>
+</li>
+<li><a href="#_table_api_的窗口聚合操作">11.3. Table API 的窗口聚合操作</a>
+<ul class="sectlevel3">
+<li><a href="#_通过一个例子了解tableapi">11.3.1. 通过一个例子了解TableAPI</a></li>
+<li><a href="#_关于group_by">11.3.2. 关于group by</a></li>
+<li><a href="#_关于时间窗口">11.3.3. 关于时间窗口</a></li>
+</ul>
+</li>
+<li><a href="#_sql如何编写">11.4. SQL如何编写</a></li>
+<li><a href="#_使用table_api结合sql实现topn需求">11.5. 使用Table API结合SQL实现TopN需求</a></li>
+<li><a href="#_只使用flink_sql实现topn需求">11.6. 只使用Flink SQL实现TopN需求</a></li>
+<li><a href="#_用户自定义函数">11.7. 用户自定义函数</a>
+<ul class="sectlevel3">
+<li><a href="#_scalar_functions">11.7.1. Scalar Functions</a></li>
+<li><a href="#_table_functions">11.7.2. Table Functions</a></li>
+<li><a href="#_aggregation_functions">11.7.3. Aggregation Functions</a></li>
+<li><a href="#_table_aggregation_functions">11.7.4. Table Aggregation Functions</a></li>
 </ul>
 </li>
 </ul>
@@ -3777,6 +3798,181 @@ keyBy()方法不同于分布式转换算子。所有的分布式转换算子将�
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_sink">5.13. Sink</h3>
+<div class="paragraph">
+<p>Flink没有类似于spark中foreach方法，让用户进行迭代的操作。虽有对外的输出操作都要利用Sink完成。最后通过类似如下方式完成整个任务最终输出操作。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-n">stream</span><span class="tok-o">.</span><span class="tok-n">addSink</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">MySink</span><span class="tok-o">(</span><span class="tok-n">xxxx</span><span class="tok-o">))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>官方提供了一部分的框架的sink。除此以外，需要用户自定义实现sink。</p>
+</div>
+<div class="sect3">
+<h4 id="_kafka">5.13.1. Kafka</h4>
+<div class="paragraph">
+<p>Kafka版本为0.11</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="xml"><span></span><span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>org.apache.flink<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>flink-connector-kafka-0.11_2.11<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>1.10.0<span class="tok-nt">&lt;/version&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Kafka版本为2.0以上</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="xml"><span></span><span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>org.apache.flink<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>flink-connector-kafka_2.11<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>1.10.0<span class="tok-nt">&lt;/version&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>主函数中添加sink：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">union</span> <span class="tok-k">=</span> <span class="tok-n">high</span><span class="tok-o">.</span><span class="tok-n">union</span><span class="tok-o">(</span><span class="tok-n">low</span><span class="tok-o">).</span><span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">temperature</span><span class="tok-o">.</span><span class="tok-n">toString</span><span class="tok-o">)</span>
+<span class="tok-n">union</span><span class="tok-o">.</span><span class="tok-n">addSink</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">FlinkKafkaProducer011</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">](</span><span class="tok-s">&quot;localhost:9092&quot;</span><span class="tok-o">,</span> <span class="tok-s">&quot;test&quot;</span><span class="tok-o">,</span> <span class="tok-k">new</span> <span class="tok-nc">SimpleStringSchema</span><span class="tok-o">()))</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_redis">5.13.2. Redis</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="xml"><span></span><span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>org.apache.bahir<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>flink-connector-redis_2.11<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>1.0<span class="tok-nt">&lt;/version&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>定义一个redis的mapper类，用于定义保存到redis时调用的命令：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">class</span> <span class="tok-nc">MyRedisMapper</span> <span class="tok-k">extends</span> <span class="tok-nc">RedisMapper</span><span class="tok-o">[</span><span class="tok-kt">SensorReading</span><span class="tok-o">]</span> <span class="tok-o">{</span>
+
+  <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">getCommandDescription</span><span class="tok-k">:</span> <span class="tok-kt">RedisCommandDescription</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-k">new</span> <span class="tok-nc">RedisCommandDescription</span><span class="tok-o">(</span><span class="tok-nc">RedisCommand</span><span class="tok-o">.</span><span class="tok-nc">HSET</span><span class="tok-o">,</span> <span class="tok-s">&quot;sensor_temperature&quot;</span><span class="tok-o">)</span>
+  <span class="tok-o">}</span>
+
+  <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">getValueFromData</span><span class="tok-o">(</span><span class="tok-n">t</span><span class="tok-k">:</span> <span class="tok-kt">SensorReading</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">String</span> <span class="tok-o">=</span> <span class="tok-n">t</span><span class="tok-o">.</span><span class="tok-n">temperature</span><span class="tok-o">.</span><span class="tok-n">toString</span>
+
+  <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">getKeyFromData</span><span class="tok-o">(</span><span class="tok-n">t</span><span class="tok-k">:</span> <span class="tok-kt">SensorReading</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">String</span> <span class="tok-o">=</span> <span class="tok-n">t</span><span class="tok-o">.</span><span class="tok-n">id</span>
+
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>在主函数中调用：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-o">&lt;</span><span class="tok-n">dependency</span><span class="tok-o">&gt;</span>
+  <span class="tok-o">&lt;</span><span class="tok-n">groupId</span><span class="tok-o">&gt;</span><span class="tok-n">org</span><span class="tok-o">.</span><span class="tok-n">apache</span><span class="tok-o">.</span><span class="tok-n">flink</span><span class="tok-o">&lt;/</span><span class="tok-n">groupId</span><span class="tok-o">&gt;</span>
+  <span class="tok-o">&lt;</span><span class="tok-n">artifactId</span><span class="tok-o">&gt;</span><span class="tok-n">flink</span><span class="tok-o">-</span><span class="tok-n">connector</span><span class="tok-o">-</span><span class="tok-n">elasticsearch6_2</span><span class="tok-o">.</span><span class="tok-mi">11</span><span class="tok-o">&lt;/</span><span class="tok-n">artifactId</span><span class="tok-o">&gt;</span>
+  <span class="tok-o">&lt;</span><span class="tok-n">version</span><span class="tok-o">&gt;</span><span class="tok-mf">1.10</span><span class="tok-o">.</span><span class="tok-mi">0</span><span class="tok-o">&lt;/</span><span class="tok-n">version</span><span class="tok-o">&gt;</span>
+<span class="tok-o">&lt;/</span><span class="tok-n">dependency</span><span class="tok-o">&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>在主函数中调用：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">httpHosts</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-n">util</span><span class="tok-o">.</span><span class="tok-nc">ArrayList</span><span class="tok-o">[</span><span class="tok-kt">HttpHost</span><span class="tok-o">]()</span>
+<span class="tok-n">httpHosts</span><span class="tok-o">.</span><span class="tok-n">add</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">HttpHost</span><span class="tok-o">(</span><span class="tok-s">&quot;localhost&quot;</span><span class="tok-o">,</span> <span class="tok-mi">9200</span><span class="tok-o">))</span>
+<span class="tok-k">val</span> <span class="tok-n">esSinkBuilder</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-nc">ElasticsearchSink</span><span class="tok-o">.</span><span class="tok-nc">Builder</span><span class="tok-o">[</span><span class="tok-kt">SensorReading</span><span class="tok-o">](</span>
+  <span class="tok-n">httpHosts</span><span class="tok-o">,</span>
+  <span class="tok-k">new</span> <span class="tok-nc">ElasticsearchSinkFunction</span><span class="tok-o">[</span><span class="tok-kt">SensorReading</span><span class="tok-o">]</span> <span class="tok-o">{</span>
+    <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">process</span><span class="tok-o">(</span><span class="tok-n">t</span><span class="tok-k">:</span> <span class="tok-kt">SensorReading</span><span class="tok-o">,</span> <span class="tok-n">runtimeContext</span><span class="tok-k">:</span> <span class="tok-kt">RuntimeContext</span><span class="tok-o">,</span> <span class="tok-n">requestIndexer</span><span class="tok-k">:</span> <span class="tok-kt">RequestIndexer</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+      <span class="tok-n">println</span><span class="tok-o">(</span><span class="tok-s">&quot;saving data: &quot;</span> <span class="tok-o">+</span> <span class="tok-n">t</span><span class="tok-o">)</span>
+      <span class="tok-k">val</span> <span class="tok-n">json</span> <span class="tok-k">=</span> <span class="tok-k">new</span> <span class="tok-n">util</span><span class="tok-o">.</span><span class="tok-nc">HashMap</span><span class="tok-o">[</span><span class="tok-kt">String</span>, <span class="tok-kt">String</span><span class="tok-o">]()</span>
+      <span class="tok-n">json</span><span class="tok-o">.</span><span class="tok-n">put</span><span class="tok-o">(</span><span class="tok-s">&quot;data&quot;</span><span class="tok-o">,</span> <span class="tok-n">t</span><span class="tok-o">.</span><span class="tok-n">toString</span><span class="tok-o">)</span>
+      <span class="tok-k">val</span> <span class="tok-n">indexRequest</span> <span class="tok-k">=</span> <span class="tok-nc">Requests</span>
+        <span class="tok-o">.</span><span class="tok-n">indexRequest</span><span class="tok-o">()</span>
+        <span class="tok-o">.</span><span class="tok-n">index</span><span class="tok-o">(</span><span class="tok-s">&quot;sensor&quot;</span><span class="tok-o">)</span>
+        <span class="tok-o">.</span><span class="tok-n">`type`</span><span class="tok-o">(</span><span class="tok-s">&quot;readingData&quot;</span><span class="tok-o">)</span>
+        <span class="tok-o">.</span><span class="tok-n">source</span><span class="tok-o">(</span><span class="tok-n">json</span><span class="tok-o">)</span>
+      <span class="tok-n">requestIndexer</span><span class="tok-o">.</span><span class="tok-n">add</span><span class="tok-o">(</span><span class="tok-n">indexRequest</span><span class="tok-o">)</span>
+      <span class="tok-n">println</span><span class="tok-o">(</span><span class="tok-s">&quot;saved successfully&quot;</span><span class="tok-o">)</span>
+    <span class="tok-o">}</span>
+  <span class="tok-o">})</span>
+<span class="tok-n">dataStream</span><span class="tok-o">.</span><span class="tok-n">addSink</span><span class="tok-o">(</span><span class="tok-n">esSinkBuilder</span><span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">())</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_jdbc自定义sink">5.13.3. JDBC自定义sink</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="xml"><span></span><span class="tok-nt">&lt;dependency&gt;</span>
+  <span class="tok-nt">&lt;groupId&gt;</span>mysql<span class="tok-nt">&lt;/groupId&gt;</span>
+  <span class="tok-nt">&lt;artifactId&gt;</span>mysql-connector-java<span class="tok-nt">&lt;/artifactId&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>5.1.44<span class="tok-nt">&lt;/version&gt;</span>
+<span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>添加MyJdbcSink</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">class</span> <span class="tok-nc">MyJdbcSink</span><span class="tok-o">()</span> <span class="tok-k">extends</span> <span class="tok-nc">RichSinkFunction</span><span class="tok-o">[</span><span class="tok-kt">SensorReading</span><span class="tok-o">]{</span>
+  <span class="tok-k">var</span> <span class="tok-n">conn</span><span class="tok-k">:</span> <span class="tok-kt">Connection</span> <span class="tok-o">=</span> <span class="tok-k">_</span>
+  <span class="tok-k">var</span> <span class="tok-n">insertStmt</span><span class="tok-k">:</span> <span class="tok-kt">PreparedStatement</span> <span class="tok-o">=</span> <span class="tok-k">_</span>
+  <span class="tok-k">var</span> <span class="tok-n">updateStmt</span><span class="tok-k">:</span> <span class="tok-kt">PreparedStatement</span> <span class="tok-o">=</span> <span class="tok-k">_</span>
+  <span class="tok-c1">// open 主要是创建连接</span>
+  <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">open</span><span class="tok-o">(</span><span class="tok-n">parameters</span><span class="tok-k">:</span> <span class="tok-kt">Configuration</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-k">super</span><span class="tok-o">.</span><span class="tok-n">open</span><span class="tok-o">(</span><span class="tok-n">parameters</span><span class="tok-o">)</span>
+    <span class="tok-n">conn</span> <span class="tok-k">=</span> <span class="tok-nc">DriverManager</span><span class="tok-o">.</span><span class="tok-n">getConnection</span><span class="tok-o">(</span><span class="tok-s">&quot;jdbc:mysql://localhost:3306/test&quot;</span><span class="tok-o">,</span> <span class="tok-s">&quot;root&quot;</span><span class="tok-o">,</span> <span class="tok-s">&quot;123456&quot;</span><span class="tok-o">)</span>
+    <span class="tok-n">insertStmt</span> <span class="tok-k">=</span> <span class="tok-n">conn</span><span class="tok-o">.</span><span class="tok-n">prepareStatement</span><span class="tok-o">(</span><span class="tok-s">&quot;INSERT INTO temperatures (sensor, temp) VALUES (?, ?)&quot;</span><span class="tok-o">)</span>
+    <span class="tok-n">updateStmt</span> <span class="tok-k">=</span> <span class="tok-n">conn</span><span class="tok-o">.</span><span class="tok-n">prepareStatement</span><span class="tok-o">(</span><span class="tok-s">&quot;UPDATE temperatures SET temp = ? WHERE sensor = ?&quot;</span><span class="tok-o">)</span>
+  <span class="tok-o">}</span>
+  <span class="tok-c1">// 调用连接，执行sql</span>
+  <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">invoke</span><span class="tok-o">(</span><span class="tok-n">value</span><span class="tok-k">:</span> <span class="tok-kt">SensorReading</span><span class="tok-o">,</span> <span class="tok-n">context</span><span class="tok-k">:</span> <span class="tok-kt">SinkFunction.Context</span><span class="tok-o">[</span><span class="tok-k">_</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-n">updateStmt</span><span class="tok-o">.</span><span class="tok-n">setDouble</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-n">value</span><span class="tok-o">.</span><span class="tok-n">temperature</span><span class="tok-o">)</span>
+    <span class="tok-n">updateStmt</span><span class="tok-o">.</span><span class="tok-n">setString</span><span class="tok-o">(</span><span class="tok-mi">2</span><span class="tok-o">,</span> <span class="tok-n">value</span><span class="tok-o">.</span><span class="tok-n">id</span><span class="tok-o">)</span>
+    <span class="tok-n">updateStmt</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">()</span>
+
+    <span class="tok-k">if</span> <span class="tok-o">(</span><span class="tok-n">updateStmt</span><span class="tok-o">.</span><span class="tok-n">getUpdateCount</span> <span class="tok-o">==</span> <span class="tok-mi">0</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+      <span class="tok-n">insertStmt</span><span class="tok-o">.</span><span class="tok-n">setString</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">,</span> <span class="tok-n">value</span><span class="tok-o">.</span><span class="tok-n">id</span><span class="tok-o">)</span>
+      <span class="tok-n">insertStmt</span><span class="tok-o">.</span><span class="tok-n">setDouble</span><span class="tok-o">(</span><span class="tok-mi">2</span><span class="tok-o">,</span> <span class="tok-n">value</span><span class="tok-o">.</span><span class="tok-n">temperature</span><span class="tok-o">)</span>
+      <span class="tok-n">insertStmt</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">()</span>
+    <span class="tok-o">}</span>
+  <span class="tok-o">}</span>
+
+  <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">close</span><span class="tok-o">()</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+    <span class="tok-n">insertStmt</span><span class="tok-o">.</span><span class="tok-n">close</span><span class="tok-o">()</span>
+    <span class="tok-n">updateStmt</span><span class="tok-o">.</span><span class="tok-n">close</span><span class="tok-o">()</span>
+    <span class="tok-n">conn</span><span class="tok-o">.</span><span class="tok-n">close</span><span class="tok-o">()</span>
+  <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>在main方法中增加，把明细保存到mysql中</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-n">dataStream</span><span class="tok-o">.</span><span class="tok-n">addSink</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">MyJdbcSink</span><span class="tok-o">())</span></code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -3991,7 +4187,7 @@ IngestionTime没什么价值，既有EventTime的执行效率（比较低），�
 <div class="content">
 <pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">class</span> <span class="tok-nc">PeriodicAssigner</span> <span class="tok-k">extends</span> <span class="tok-nc">AssignerWithPeriodicWatermarks</span><span class="tok-o">[</span><span class="tok-kt">SensorReading</span><span class="tok-o">]</span> <span class="tok-o">{</span>
   <span class="tok-k">val</span> <span class="tok-n">bound</span><span class="tok-k">:</span> <span class="tok-kt">Long</span> <span class="tok-o">=</span> <span class="tok-mi">60</span> <span class="tok-o">*</span> <span class="tok-mi">1000</span> <span class="tok-c1">// 延时为1分钟</span>
-  <span class="tok-k">var</span> <span class="tok-n">maxTs</span><span class="tok-k">:</span> <span class="tok-kt">Long</span> <span class="tok-o">=</span> <span class="tok-nc">Long</span><span class="tok-o">.</span><span class="tok-nc">MinValue</span> <span class="tok-c1">// 观察到的最大时间戳</span>
+  <span class="tok-k">var</span> <span class="tok-n">maxTs</span><span class="tok-k">:</span> <span class="tok-kt">Long</span> <span class="tok-o">=</span> <span class="tok-nc">Long</span><span class="tok-o">.</span><span class="tok-nc">MinValue</span> <span class="tok-o">+</span> <span class="tok-n">bound</span> <span class="tok-c1">// 观察到的最大时间戳</span>
 
   <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">getCurrentWatermark</span><span class="tok-k">:</span> <span class="tok-kt">Watermark</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
     <span class="tok-k">new</span> <span class="tok-nc">Watermark</span><span class="tok-o">(</span><span class="tok-n">maxTs</span> <span class="tok-o">-</span> <span class="tok-n">bound</span><span class="tok-o">)</span>
@@ -4644,7 +4840,7 @@ IngestionTime没什么价值，既有EventTime的执行效率（比较低），�
 <pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">avgTempPerWindow</span><span class="tok-k">:</span> <span class="tok-kt">DataStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">Double</span><span class="tok-o">)]</span> <span class="tok-k">=</span> <span class="tok-n">sensorData</span>
   <span class="tok-o">.</span><span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-n">r</span> <span class="tok-k">=&gt;</span> <span class="tok-o">(</span><span class="tok-n">r</span><span class="tok-o">.</span><span class="tok-n">id</span><span class="tok-o">,</span> <span class="tok-n">r</span><span class="tok-o">.</span><span class="tok-n">temperature</span><span class="tok-o">))</span>
   <span class="tok-o">.</span><span class="tok-n">keyBy</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">_1</span><span class="tok-o">)</span>
-  <span class="tok-o">.</span><span class="tok-n">timeWindow</span><span class="tok-o">(</span><span class="tok-nc">Timeseconds</span><span class="tok-o">(</span><span class="tok-mi">15</span><span class="tok-o">))</span>
+  <span class="tok-o">.</span><span class="tok-n">timeWindow</span><span class="tok-o">(</span><span class="tok-nc">Time</span><span class="tok-o">.</span><span class="tok-n">seconds</span><span class="tok-o">(</span><span class="tok-mi">15</span><span class="tok-o">))</span>
   <span class="tok-o">.</span><span class="tok-n">aggregate</span><span class="tok-o">(</span><span class="tok-k">new</span> <span class="tok-nc">AvgTempFunction</span><span class="tok-o">)</span>
 
 <span class="tok-c1">// An AggregateFunction to compute the average temperature per sensor.</span>
@@ -7400,6 +7596,9 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 <div class="sect1">
 <h2 id="_flink_table_api_sql">11. Flink Table API &amp; SQL</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>Table API是流处理和批处理通用的关系型API，Table API可以基于流输入或者批输入来运行而不需要进行任何修改。Table API是SQL语言的超集并专门为Apache Flink设计的，Table API是Scala 和Java语言集成式的API。与常规SQL语言中将查询指定为字符串不同，Table API查询是以Java或Scala中的语言嵌入样式来定义的，具有IDE支持如:自动完成和语法检测。</p>
+</div>
 <div class="sect2">
 <h3 id="_导入依赖">11.1. 导入依赖</h3>
 <div class="paragraph">
@@ -7459,7 +7658,241 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_使用table_api结合sql实现topn需求">11.2. 使用Table API结合SQL实现TopN需求</h3>
+<h3 id="_简单了解table_api">11.2. 简单了解Table API</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+  <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+  <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">inputStream</span> <span class="tok-k">=</span> <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">readTextFile</span><span class="tok-o">(</span><span class="tok-s">&quot;sensor.txt&quot;</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">dataStream</span> <span class="tok-k">=</span> <span class="tok-n">inputStream</span>
+    <span class="tok-o">.</span><span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-n">data</span> <span class="tok-k">=&gt;</span> <span class="tok-o">{</span>
+      <span class="tok-k">val</span> <span class="tok-n">dataArray</span> <span class="tok-k">=</span> <span class="tok-n">data</span><span class="tok-o">.</span><span class="tok-n">split</span><span class="tok-o">(</span><span class="tok-s">&quot;,&quot;</span><span class="tok-o">)</span>
+      <span class="tok-nc">SensorReading</span><span class="tok-o">(</span><span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">0</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">,</span> <span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">.</span><span class="tok-n">toLong</span><span class="tok-o">,</span> <span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">2</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">.</span><span class="tok-n">toDouble</span><span class="tok-o">)</span>
+    <span class="tok-o">})</span>
+  <span class="tok-k">val</span> <span class="tok-n">settings</span><span class="tok-k">:</span> <span class="tok-kt">EnvironmentSettings</span> <span class="tok-o">=</span> <span class="tok-nc">EnvironmentSettings</span>
+    <span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">useOldPlanner</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+  <span class="tok-k">val</span> <span class="tok-n">tableEnv</span><span class="tok-k">:</span> <span class="tok-kt">StreamTableEnvironment</span> <span class="tok-o">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+  <span class="tok-c1">// 从一条流创建一张表</span>
+  <span class="tok-k">val</span> <span class="tok-n">dataTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">tableEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">dataStream</span><span class="tok-o">)</span>
+  <span class="tok-c1">// 从表里选取特定的数据</span>
+  <span class="tok-k">val</span> <span class="tok-n">selectedTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">dataTable</span>
+    <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;temperature</span><span class="tok-o">)</span>
+    <span class="tok-o">.</span><span class="tok-n">filter</span><span class="tok-o">(</span><span class="tok-s">&quot;id = &#39;sensor_1&#39;&quot;</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">selectedStream</span><span class="tok-k">:</span> <span class="tok-kt">DataStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">Double</span><span class="tok-o">)]</span> <span class="tok-k">=</span> <span class="tok-n">selectedTable</span>
+    <span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">Double</span><span class="tok-o">)]</span>
+  <span class="tok-n">selectedStream</span><span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+  <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">(</span><span class="tok-s">&quot;table test&quot;</span><span class="tok-o">)</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_动态表">11.2.1. 动态表</h4>
+<div class="paragraph">
+<p>如果流中的数据类型是case class可以直接根据case class的结构生成table</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-n">tableEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">dataStream</span><span class="tok-o">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>或者根据字段顺序单独命名</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-n">tableEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">dataStream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;timestamp</span><span class="tok-o">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>最后的动态表可以转换为流进行输出</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-n">table</span><span class="tok-o">.</span><span class="tok-n">toAppendStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>,<span class="tok-kt">String</span><span class="tok-o">)]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_字段">11.2.2. 字段</h4>
+<div class="paragraph">
+<p>用一个单引号放到字段前面来标识字段名, 如 'name , 'id , 'amount 等</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_table_api_的窗口聚合操作">11.3. Table API 的窗口聚合操作</h3>
+<div class="sect3">
+<h4 id="_通过一个例子了解tableapi">11.3.1. 通过一个例子了解TableAPI</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-c1">// 统计每10秒中每个传感器温度值的个数</span>
+<span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+  <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+  <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+  <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setStreamTimeCharacteristic</span><span class="tok-o">(</span><span class="tok-nc">TimeCharacteristic</span><span class="tok-o">.</span><span class="tok-nc">EventTime</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">inputStream</span> <span class="tok-k">=</span> <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">readTextFile</span><span class="tok-o">(</span><span class="tok-s">&quot;..\\sensor.txt&quot;</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">dataStream</span> <span class="tok-k">=</span> <span class="tok-n">inputStream</span>
+    <span class="tok-o">.</span><span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-n">data</span> <span class="tok-k">=&gt;</span> <span class="tok-o">{</span>
+      <span class="tok-k">val</span> <span class="tok-n">dataArray</span> <span class="tok-k">=</span> <span class="tok-n">data</span><span class="tok-o">.</span><span class="tok-n">split</span><span class="tok-o">(</span><span class="tok-s">&quot;,&quot;</span><span class="tok-o">)</span>
+      <span class="tok-nc">SensorReading</span><span class="tok-o">(</span><span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">0</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">,</span> <span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">.</span><span class="tok-n">toLong</span><span class="tok-o">,</span> <span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">2</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">.</span><span class="tok-n">toDouble</span><span class="tok-o">)</span>
+    <span class="tok-o">})</span>
+    <span class="tok-o">.</span><span class="tok-n">assignTimestampsAndWatermarks</span><span class="tok-o">(</span>
+      <span class="tok-k">new</span> <span class="tok-nc">BoundedOutOfOrdernessTimestampExtractor</span><span class="tok-o">[</span><span class="tok-kt">SensorReading</span><span class="tok-o">](</span><span class="tok-nc">Time</span><span class="tok-o">.</span><span class="tok-n">seconds</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">))</span> <span class="tok-o">{</span>
+        <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">extractTimestamp</span><span class="tok-o">(</span><span class="tok-n">element</span><span class="tok-k">:</span> <span class="tok-kt">SensorReading</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Long</span> <span class="tok-o">=</span> <span class="tok-n">element</span><span class="tok-o">.</span><span class="tok-n">timestamp</span> <span class="tok-o">*</span> <span class="tok-mi">1000L</span>
+      <span class="tok-o">}</span>
+    <span class="tok-o">)</span>
+  <span class="tok-c1">// 基于env创建 tableEnv</span>
+  <span class="tok-k">val</span> <span class="tok-n">settings</span><span class="tok-k">:</span> <span class="tok-kt">EnvironmentSettings</span> <span class="tok-o">=</span> <span class="tok-nc">EnvironmentSettings</span>
+    <span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">useOldPlanner</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+  <span class="tok-k">val</span> <span class="tok-n">tableEnv</span><span class="tok-k">:</span> <span class="tok-kt">StreamTableEnvironment</span> <span class="tok-o">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+  <span class="tok-c1">// 从一条流创建一张表，按照字段去定义，并指定事件时间的时间字段</span>
+  <span class="tok-k">val</span> <span class="tok-n">dataTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">tableEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">dataStream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;temperature</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;ts</span><span class="tok-o">.</span><span class="tok-n">rowtime</span><span class="tok-o">)</span>
+  <span class="tok-c1">// 按照时间开窗聚合统计</span>
+  <span class="tok-k">val</span> <span class="tok-n">resultTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">dataTable</span>
+    <span class="tok-o">.</span><span class="tok-n">window</span><span class="tok-o">(</span><span class="tok-nc">Tumble</span> <span class="tok-n">over</span> <span class="tok-mf">10.</span><span class="tok-n">seconds</span> <span class="tok-n">on</span> <span class=" tok--Symbol">&#39;ts</span> <span class="tok-n">as</span> <span class=" tok--Symbol">&#39;tw</span> <span class="tok-o">)</span>
+    <span class="tok-o">.</span><span class="tok-n">groupBy</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;tw</span><span class="tok-o">)</span>
+    <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">.</span><span class="tok-n">count</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">selectedStream</span><span class="tok-k">:</span> <span class="tok-kt">DataStream</span><span class="tok-o">[(</span><span class="tok-kt">Boolean</span>, <span class="tok-o">(</span><span class="tok-kt">String</span>, <span class="tok-kt">Long</span><span class="tok-o">))]</span> <span class="tok-k">=</span> <span class="tok-n">resultTable</span>
+    <span class="tok-o">.</span><span class="tok-n">toRetractStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">Long</span><span class="tok-o">)]</span>
+  <span class="tok-n">selectedStream</span><span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+  <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">(</span><span class="tok-s">&quot;table window test&quot;</span><span class="tok-o">)</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_关于group_by">11.3.2. 关于group by</h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>如果了使用 groupby，table转换为流的时候只能用toRetractDstream</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">dataStream</span><span class="tok-k">:</span> <span class="tok-kt">DataStream</span><span class="tok-o">[(</span><span class="tok-kt">Boolean</span>, <span class="tok-o">(</span><span class="tok-kt">String</span>, <span class="tok-kt">Long</span><span class="tok-o">))]</span> <span class="tok-k">=</span> <span class="tok-n">table</span><span class="tok-o">.</span><span class="tok-n">toRetractStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>,<span class="tok-kt">Long</span><span class="tok-o">)]</span></code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>toRetractDstream得到的第一个boolean型字段标识true就是最新的数据(Insert)，false表示过期老数据(Delete)</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">dataStream</span><span class="tok-k">:</span> <span class="tok-kt">DataStream</span><span class="tok-o">[(</span><span class="tok-kt">Boolean</span>, <span class="tok-o">(</span><span class="tok-kt">String</span>, <span class="tok-kt">Long</span><span class="tok-o">))]</span> <span class="tok-k">=</span> <span class="tok-n">table</span><span class="tok-o">.</span><span class="tok-n">toRetractStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>,<span class="tok-kt">Long</span><span class="tok-o">)]</span>
+<span class="tok-n">dataStream</span><span class="tok-o">.</span><span class="tok-n">filter</span><span class="tok-o">(</span><span class="tok-k">_</span><span class="tok-o">.</span><span class="tok-n">_1</span><span class="tok-o">).</span><span class="tok-n">print</span><span class="tok-o">()</span></code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>如果使用的api包括时间窗口，那么窗口的字段必须出现在groupBy中。</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">resultTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">dataTable</span>
+  <span class="tok-o">.</span><span class="tok-n">window</span><span class="tok-o">(</span> <span class="tok-nc">Tumble</span> <span class="tok-n">over</span> <span class="tok-mf">10.</span><span class="tok-n">seconds</span> <span class="tok-n">on</span> <span class=" tok--Symbol">&#39;ts</span> <span class="tok-n">as</span> <span class=" tok--Symbol">&#39;tw</span> <span class="tok-o">)</span>
+  <span class="tok-o">.</span><span class="tok-n">groupBy</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;tw</span><span class="tok-o">)</span>
+  <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">.</span><span class="tok-n">count</span><span class="tok-o">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_关于时间窗口">11.3.3. 关于时间窗口</h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>用到时间窗口，必须提前声明时间字段，如果是Processing Time直接在创建动态表时进行追加就可以。</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">dataTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">tableEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">dataStream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;temperature</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;ps</span><span class="tok-o">.</span><span class="tok-n">proctime</span><span class="tok-o">)</span></code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>如果是EventTime要在创建动态表时声明</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">dataTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">tableEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">dataStream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;temperature</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;ts</span><span class="tok-o">.</span><span class="tok-n">rowtime</span><span class="tok-o">)</span></code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>滚动窗口可以使用Tumble over 10000.millis on来表示</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">val</span> <span class="tok-n">resultTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">dataTable</span>
+  <span class="tok-o">.</span><span class="tok-n">window</span><span class="tok-o">(</span> <span class="tok-nc">Tumble</span> <span class="tok-n">over</span> <span class="tok-mf">10.</span><span class="tok-n">seconds</span> <span class="tok-n">on</span> <span class=" tok--Symbol">&#39;ts</span> <span class="tok-n">as</span> <span class=" tok--Symbol">&#39;tw</span><span class="tok-o">)</span>
+  <span class="tok-o">.</span><span class="tok-n">groupBy</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;tw</span><span class="tok-o">)</span>
+  <span class="tok-o">.</span><span class="tok-n">select</span><span class="tok-o">(</span><span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">.</span><span class="tok-n">count</span><span class="tok-o">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sql如何编写">11.4. SQL如何编写</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-c1">// 统计每10秒中每个传感器温度值的个数</span>
+<span class="tok-k">def</span> <span class="tok-n">main</span><span class="tok-o">(</span><span class="tok-n">args</span><span class="tok-k">:</span> <span class="tok-kt">Array</span><span class="tok-o">[</span><span class="tok-kt">String</span><span class="tok-o">])</span><span class="tok-k">:</span> <span class="tok-kt">Unit</span> <span class="tok-o">=</span> <span class="tok-o">{</span>
+  <span class="tok-k">val</span> <span class="tok-n">env</span> <span class="tok-k">=</span> <span class="tok-nc">StreamExecutionEnvironment</span><span class="tok-o">.</span><span class="tok-n">getExecutionEnvironment</span>
+  <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setParallelism</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">)</span>
+  <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">setStreamTimeCharacteristic</span><span class="tok-o">(</span><span class="tok-nc">TimeCharacteristic</span><span class="tok-o">.</span><span class="tok-nc">EventTime</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">inputStream</span> <span class="tok-k">=</span> <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">readTextFile</span><span class="tok-o">(</span><span class="tok-s">&quot;sensor.txt&quot;</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">dataStream</span> <span class="tok-k">=</span> <span class="tok-n">inputStream</span>
+    <span class="tok-o">.</span><span class="tok-n">map</span><span class="tok-o">(</span><span class="tok-n">data</span> <span class="tok-k">=&gt;</span> <span class="tok-o">{</span>
+      <span class="tok-k">val</span> <span class="tok-n">dataArray</span> <span class="tok-k">=</span> <span class="tok-n">data</span><span class="tok-o">.</span><span class="tok-n">split</span><span class="tok-o">(</span><span class="tok-s">&quot;,&quot;</span><span class="tok-o">)</span>
+      <span class="tok-nc">SensorReading</span><span class="tok-o">(</span><span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">0</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">,</span> <span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">.</span><span class="tok-n">toLong</span><span class="tok-o">,</span> <span class="tok-n">dataArray</span><span class="tok-o">(</span><span class="tok-mi">2</span><span class="tok-o">).</span><span class="tok-n">trim</span><span class="tok-o">.</span><span class="tok-n">toDouble</span><span class="tok-o">)</span>
+    <span class="tok-o">})</span>
+    <span class="tok-o">.</span><span class="tok-n">assignTimestampsAndWatermarks</span><span class="tok-o">(</span>
+      <span class="tok-k">new</span> <span class="tok-nc">BoundedOutOfOrdernessTimestampExtractor</span><span class="tok-o">[</span><span class="tok-kt">SensorReading</span><span class="tok-o">](</span><span class="tok-nc">Time</span><span class="tok-o">.</span><span class="tok-n">seconds</span><span class="tok-o">(</span><span class="tok-mi">1</span><span class="tok-o">))</span> <span class="tok-o">{</span>
+        <span class="tok-k">override</span> <span class="tok-k">def</span> <span class="tok-n">extractTimestamp</span><span class="tok-o">(</span><span class="tok-n">element</span><span class="tok-k">:</span> <span class="tok-kt">SensorReading</span><span class="tok-o">)</span><span class="tok-k">:</span> <span class="tok-kt">Long</span> <span class="tok-o">=</span> <span class="tok-n">element</span><span class="tok-o">.</span><span class="tok-n">timestamp</span> <span class="tok-o">*</span> <span class="tok-mi">1000L</span>
+      <span class="tok-o">}</span>
+    <span class="tok-o">)</span>
+  <span class="tok-c1">// 基于env创建 tableEnv</span>
+  <span class="tok-k">val</span> <span class="tok-n">settings</span><span class="tok-k">:</span> <span class="tok-kt">EnvironmentSettings</span> <span class="tok-o">=</span> <span class="tok-nc">EnvironmentSettings</span>
+    <span class="tok-o">.</span><span class="tok-n">newInstance</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">useOldPlanner</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">inStreamingMode</span><span class="tok-o">()</span>
+    <span class="tok-o">.</span><span class="tok-n">build</span><span class="tok-o">()</span>
+  <span class="tok-k">val</span> <span class="tok-n">tableEnv</span><span class="tok-k">:</span> <span class="tok-kt">StreamTableEnvironment</span> <span class="tok-o">=</span> <span class="tok-nc">StreamTableEnvironment</span><span class="tok-o">.</span><span class="tok-n">create</span><span class="tok-o">(</span><span class="tok-n">env</span><span class="tok-o">,</span> <span class="tok-n">settings</span><span class="tok-o">)</span>
+  <span class="tok-c1">// 从一条流创建一张表，按照字段去定义，并指定事件时间的时间字段</span>
+  <span class="tok-k">val</span> <span class="tok-n">dataTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">tableEnv</span><span class="tok-o">.</span><span class="tok-n">fromDataStream</span><span class="tok-o">(</span><span class="tok-n">dataStream</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;id</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;temperature</span><span class="tok-o">,</span> <span class=" tok--Symbol">&#39;ts</span><span class="tok-o">.</span><span class="tok-n">rowtime</span><span class="tok-o">)</span>
+  <span class="tok-c1">// 直接写sql完成开窗统计</span>
+  <span class="tok-k">val</span> <span class="tok-n">resultSqlTable</span><span class="tok-k">:</span> <span class="tok-kt">Table</span> <span class="tok-o">=</span> <span class="tok-n">tableEnv</span><span class="tok-o">.</span><span class="tok-n">sqlQuery</span><span class="tok-o">(</span><span class="tok-s">&quot;select id, count(id) from &quot;</span> <span class="tok-o">+</span> <span class="tok-n">dataTable</span> <span class="tok-o">+</span> <span class="tok-s">&quot; group by id, tumble(ts, interval &#39;15&#39; second)&quot;</span><span class="tok-o">)</span>
+  <span class="tok-k">val</span> <span class="tok-n">selectedStream</span><span class="tok-k">:</span> <span class="tok-kt">DataStream</span><span class="tok-o">[(</span><span class="tok-kt">Boolean</span>, <span class="tok-o">(</span><span class="tok-kt">String</span>, <span class="tok-kt">Long</span><span class="tok-o">))]</span> <span class="tok-k">=</span> <span class="tok-n">resultSqlTable</span><span class="tok-o">.</span><span class="tok-n">toRetractStream</span><span class="tok-o">[(</span><span class="tok-kt">String</span>, <span class="tok-kt">Long</span><span class="tok-o">)]</span>
+  <span class="tok-n">selectedStream</span><span class="tok-o">.</span><span class="tok-n">print</span><span class="tok-o">()</span>
+  <span class="tok-n">env</span><span class="tok-o">.</span><span class="tok-n">execute</span><span class="tok-o">(</span><span class="tok-s">&quot;table window test&quot;</span><span class="tok-o">)</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_使用table_api结合sql实现topn需求">11.5. 使用Table API结合SQL实现TopN需求</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.project.topnhotitems</span>
@@ -7532,7 +7965,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_只使用flink_sql实现topn需求">11.3. 只使用Flink SQL实现TopN需求</h3>
+<h3 id="_只使用flink_sql实现topn需求">11.6. 只使用Flink SQL实现TopN需求</h3>
 <div class="paragraph">
 <p>代码</p>
 </div>
@@ -7591,9 +8024,9 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_用户自定义函数">11.4. 用户自定义函数</h3>
+<h3 id="_用户自定义函数">11.7. 用户自定义函数</h3>
 <div class="sect3">
-<h4 id="_scalar_functions">11.4.1. Scalar Functions</h4>
+<h4 id="_scalar_functions">11.7.1. Scalar Functions</h4>
 <div class="paragraph">
 <p>例子</p>
 </div>
@@ -7647,7 +8080,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect3">
-<h4 id="_table_functions">11.4.2. Table Functions</h4>
+<h4 id="_table_functions">11.7.2. Table Functions</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="scala"><span></span><span class="tok-k">package</span> <span class="tok-nn">com.atguigu.course</span>
@@ -7715,7 +8148,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect3">
-<h4 id="_aggregation_functions">11.4.3. Aggregation Functions</h4>
+<h4 id="_aggregation_functions">11.7.3. Aggregation Functions</h4>
 <div class="paragraph">
 <p>例子</p>
 </div>
@@ -7791,7 +8224,7 @@ Modify job bc0b2ad61ecd4a615d92ce25390f61ad.
 </div>
 </div>
 <div class="sect3">
-<h4 id="_table_aggregation_functions">11.4.4. Table Aggregation Functions</h4>
+<h4 id="_table_aggregation_functions">11.7.4. Table Aggregation Functions</h4>
 <div class="paragraph">
 <p>例子</p>
 </div>

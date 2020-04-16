@@ -117,7 +117,7 @@ env.getConfig.setAutoWatermarkInterval(5000)
 ----
 class PeriodicAssigner extends AssignerWithPeriodicWatermarks[SensorReading] {
   val bound: Long = 60 * 1000 // 延时为1分钟
-  var maxTs: Long = Long.MinValue // 观察到的最大时间戳
+  var maxTs: Long = Long.MinValue + bound // 观察到的最大时间戳
 
   override def getCurrentWatermark: Watermark = {
     new Watermark(maxTs - bound)
@@ -596,7 +596,7 @@ IN是输入元素的类型，ACC是累加器的类型，OUT是输出元素的类
 val avgTempPerWindow: DataStream[(String, Double)] = sensorData
   .map(r => (r.id, r.temperature))
   .keyBy(_._1)
-  .timeWindow(Timeseconds(15))
+  .timeWindow(Time.seconds(15))
   .aggregate(new AvgTempFunction)
 
 // An AggregateFunction to compute the average temperature per sensor.
